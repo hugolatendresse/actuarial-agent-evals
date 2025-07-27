@@ -1,0 +1,22 @@
+[
+    {
+        "id": "Exam5_Q1",
+        "source_exam": "CAS Exam 5",
+        "source_year": "2024",
+        "topics": [
+            "Loss Reserving",
+            "Chain-Ladder"
+        ],
+        "question_text": "A triangular table of cumulative paid losses is provided in data.csv. Calculate the ultimate losses for each accident year using the chain-ladder method. Print the final list of ultimate losses.",
+        "setup_code": "import pandas as pd\\n\\ndata = [[350, 600, 800, 950], [450, 750, 1000, None], [550, 900, None, None], [700, None, None, None]]\\ntriangle = pd.DataFrame(data, index=[2019, 2020, 2021, 2022])\\n",
+        "verification": {
+            "type": "python_assertion",
+            "expected_output": "[950.0, 1145.833, 1319.479, 1583.375]",
+            "evaluation_script": "import numpy as np\\nassert np.allclose(actual, expected, atol=0.01)"
+        }
+
+
+
+
+    }
+]
