@@ -10,10 +10,16 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import Dict, Any, List
 
+# TODO format other than .json for benchmarks to allow multi line strings. py files would be good. 
+# Can also link to py files and text files in the benchmark.json file.
+
+# TODO look into the following potential other avenues:
+# Claude code is like cursor but from the command line. We could have an llm grader look at the command line too and interact with Claude Code https://www.anthropic.com/claude-code
+# Janito is an open-source Claude Code https://janito.dev/
+
+
 ANSWER_FILENAME = "answer.py"
 RESULTS_DIR = "ide_results"
-
-# TODO format other than .json for benchmarks to allow multi line strings
 
 # --- File Watcher Handler ---
 
