@@ -1,4 +1,5 @@
-{
+[
+  {
     "question_id": "EX5-F19-Q01",
     "domain": "ratemaking",
     "topic": "exposures",
@@ -39,5 +40,83 @@
       "unearned exposure",
       "calendar year vs policy year"
     ]
+  },
+  
+  {
+    "question_id": "EX5-F19-Q02",
+    "domain": "ratemaking",
+    "topic": "premiums",
+    "question_text": "Given the following policies for an insurance company, \n(a) Calculate the written premium for the fiscal year ending July 31, 2018.\n(b) Calculate the in-force premium as of December 15, 2018.\n(c) Calculate the 2018 calendar year written premium if Policy C is cancelled on March 31, 2018.",
+    "inputs": {
+      "policies": [
+        { "policy": "A", "effective_date": "2017-03-01", "expiration_date": "2018-02-28", "written_premium": 1200 },
+        { "policy": "B", "effective_date": "2017-06-01", "expiration_date": "2017-11-30", "written_premium": 1500 },
+        { "policy": "C", "effective_date": "2017-07-01", "expiration_date": "2018-06-30", "written_premium": 2000 },
+        { "policy": "D", "effective_date": "2017-10-01", "expiration_date": "2018-09-30", "written_premium": 750 },
+        { "policy": "E", "effective_date": "2018-01-01", "expiration_date": "2018-12-31", "written_premium": 900 },
+        { "policy": "F", "effective_date": "2018-04-01", "expiration_date": "2018-09-30", "written_premium": 1650 },
+        { "policy": "G", "effective_date": "2018-08-01", "expiration_date": "2019-07-31", "written_premium": 1350 }
+      ]
+    },
+    "expected_answer": {
+      "type": "multi_part_numeric",
+      "parts": {
+        "a": { "value": 3300.0, "tolerance": 0.01 },
+        "b": { "value": 2250.0, "tolerance": 0.01 },
+        "c": { "value": 3400.0, "tolerance": 0.01 }
+      }
+    },
+    "source": "CAS Exam 5, Fall 2019, Question 2",
+    "tags": [
+      "written premium",
+      "fiscal year accounting",
+      "in-force premium",
+      "calendar year",
+      "policy cancellation"
+    ]
+  },
+
+  {
+    "question_id": "EX5-F19-Q03a",
+    "domain": "ratemaking",
+    "topic": "credibility",
+    "question_text": "Calculate the credibility-weighted indicated rate change using the classical credibility approach and trended present rates as the complement of credibility. The loss experience is considered fully credible if there is a 90% probability that the observed experience is within 2.5% of its expected value.",
+    "inputs": {
+      "number_of_exposures": 20000,
+      "indicated_rate_change_before_credibility": 0.079,
+      "projected_frequency": 0.03,
+      "annual_loss_trend": -0.01,
+      "annual_premium_trend": 0.015,
+      "target_effective_date": "2019-01-01",
+      "prior_indicated_rate_change": 0.08,
+      "prior_implemented_rate_change": 0.035,
+      "prior_effective_date": "2017-01-01",
+      "credibility_probability": 0.90,
+      "credibility_range": 0.025,
+      "normal_distribution_table": [
+        { "p": 0.800, "z": 0.842 },
+        { "p": 0.850, "z": 1.036 },
+        { "p": 0.900, "z": 1.282 },
+        { "p": 0.950, "z": 1.645 },
+        { "p": 0.975, "z": 1.960 },
+        { "p": 0.990, "z": 2.326 }
+      ]
+    },
+    "expected_answer": {
+      "type": "point_estimate",
+      "value": 0.0248,
+      "tolerance": 0.0001
+    },
+    "source": "CAS Exam 5, Fall 2019, Question 3a",
+    "tags": [
+      "credibility",
+      "indicated rate change",
+      "classical credibility",
+      "trended present rates",
+      "premium trend",
+      "loss trend"
+    ]
   }
+  
+]
   
