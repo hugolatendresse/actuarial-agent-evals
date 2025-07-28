@@ -1,22 +1,43 @@
-[
-    {
-        "id": "Exam5_Q1",
-        "source_exam": "CAS Exam 5",
-        "source_year": "2024",
-        "topics": [
-            "Loss Reserving",
-            "Chain-Ladder"
-        ],
-        "question_text": "A triangular table of cumulative paid losses is provided in data.csv. Calculate the ultimate losses for each accident year using the chain-ladder method. Print the final list of ultimate losses.",
-        "setup_code": "import pandas as pd\\n\\ndata = [[350, 600, 800, 950], [450, 750, 1000, None], [550, 900, None, None], [700, None, None, None]]\\ntriangle = pd.DataFrame(data, index=[2019, 2020, 2021, 2022])\\n",
-        "verification": {
-            "type": "python_assertion",
-            "expected_output": "[950.0, 1145.833, 1319.479, 1583.375]",
-            "evaluation_script": "import numpy as np\\nassert np.allclose(actual, expected, atol=0.01)"
-        }
-
-
-
-
-    }
-]
+{
+    "question_id": "EX5-F19-Q01",
+    "domain": "ratemaking",
+    "topic": "exposures",
+    "question_text": "Given the following quarterly exposure information and the notes provided, answer the following:\n(a) Calculate the 2017 policy year earned exposures as of March 31, 2018.\n(b) Calculate the in-force exposures as of May 31, 2018.\n(c) Calculate the calendar year 2018 unearned exposures.\n(d) Calculate the calendar year 2019 quarter 1 earned exposures.",
+    "inputs": {
+      "written_and_earned_exposures": [
+        { "quarter": "2017 Q1", "written": 100, "earned": 5.00 },
+        { "quarter": "2017 Q2", "written": 450, "earned": 247.50 },
+        { "quarter": "2017 Q3", "written": 400, "earned": 427.50 },
+        { "quarter": "2017 Q4", "written": 100, "earned": 52.50 },
+        { "quarter": "2018 Q1", "written": 125, "earned": 53.75 },
+        { "quarter": "2018 Q2", "written": 550, "earned": 528.75 },
+        { "quarter": "2018 Q3", "written": 475, "earned": 562.50 },
+        { "quarter": "2018 Q4", "written": 30, "earned": 59.00 }
+      ],
+      "notes": [
+        "The company started writing business on January 1, 2017.",
+        "The company stopped writing business on December 31, 2018.",
+        "The quarterly earnings pattern was set by analyzing historical experience across the industry and is not uniform.",
+        "All policies are annual and written on the first day of the quarter.",
+        "No policy cancellations or mid-term adjustments."
+      ]
+    },
+    "expected_answer": {
+      "type": "multi_part_numeric",
+      "parts": {
+        "a": { "value": 780.0, "tolerance": 0.01 },
+        "b": { "value": 1175.0, "tolerance": 0.01 },
+        "c": { "value": 293.5, "tolerance": 0.01 },
+        "d": { "value": 52.75, "tolerance": 0.01 }
+      }
+    },
+    "source": "CAS Exam 5, Fall 2019, Question 1",
+    "tags": [
+      "written exposure",
+      "earned exposure",
+      "in-force exposure",
+      "unearned exposure",
+      "calendar year vs policy year"
+    ]
+  }
+  
