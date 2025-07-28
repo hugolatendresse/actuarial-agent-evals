@@ -116,7 +116,34 @@
       "premium trend",
       "loss trend"
     ]
+  },
+
+  {
+    "question_id": "EX5-F19-Q05ab",
+    "domain": "ratemaking",
+    "topic": "loss trend",
+    "question_text": "The following is to be used in developing a rate indication effective January 1, 2021:\n- Indication is based on accident year experience\n- Historical experience is from accident year 2018\n- Annual loss trend is +2%\n\n(a) Calculate the appropriate loss trend factor to trend from 7/1/2018 to 1/1/2022.\n(b) Calculate the appropriate loss trend factor to trend from 1/1/2019 to 1/1/2022.",
+    "expected_answer": {
+      "type": "multi_part_numeric",
+      "parts": {
+        "a": {
+          "value": 1.072,
+          "tolerance": 0.001
+        },
+        "b": {
+          "value": 1.061,
+          "tolerance": 0.001
+        }
+      }
+    },
+    "source": "CAS Exam 5, Fall 2019, Question 5 a & b",
+    "tags": [
+      "loss trend",
+      "trend factor calculation",
+      "ratemaking"
+    ]
   }
+  
   
 ]
   
