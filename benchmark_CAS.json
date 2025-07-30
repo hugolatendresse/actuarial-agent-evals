@@ -3,26 +3,37 @@
     "question_id": "EX5-F19-Q01",
     "domain": "ratemaking",
     "topic": "exposures",
-    "question_text": "Given the following quarterly exposure information and the notes provided, answer the following:\n(a) Calculate the 2017 policy year earned exposures as of March 31, 2018.\n(b) Calculate the in-force exposures as of May 31, 2018.\n(c) Calculate the calendar year 2018 unearned exposures.\n(d) Calculate the calendar year 2019 quarter 1 earned exposures.",
-    "inputs": {
-      "written_and_earned_exposures": [
-        { "quarter": "2017 Q1", "written": 100, "earned": 5.00 },
-        { "quarter": "2017 Q2", "written": 450, "earned": 247.50 },
-        { "quarter": "2017 Q3", "written": 400, "earned": 427.50 },
-        { "quarter": "2017 Q4", "written": 100, "earned": 52.50 },
-        { "quarter": "2018 Q1", "written": 125, "earned": 53.75 },
-        { "quarter": "2018 Q2", "written": 550, "earned": 528.75 },
-        { "quarter": "2018 Q3", "written": 475, "earned": 562.50 },
-        { "quarter": "2018 Q4", "written": 30, "earned": 59.00 }
-      ],
-      "notes": [
-        "The company started writing business on January 1, 2017.",
-        "The company stopped writing business on December 31, 2018.",
-        "The quarterly earnings pattern was set by analyzing historical experience across the industry and is not uniform.",
-        "All policies are annual and written on the first day of the quarter.",
-        "No policy cancellations or mid-term adjustments."
-      ]
+    "question_text": {
+      "prompt": "Given the following quarterly exposure information and the notes provided, answer the following:",
+      "type": "multi_part",
+      "parts": {
+        "a": "Calculate the 2017 policy year earned exposures as of March 31, 2018.",
+        "b": "Calculate the in-force exposures as of May 31, 2018.", 
+        "c": "Calculate the calendar year 2018 unearned exposures.",
+        "d": "Calculate the calendar year 2019 quarter 1 earned exposures."
+      }
     },
+    "inputs": [
+      {
+        "name": "written_and_earned_exposures",
+        "type": "table",
+        "data": [
+          { "quarter": "2017 Q1", "written": 100, "earned": 5.00 },
+          { "quarter": "2017 Q2", "written": 450, "earned": 247.50 },
+          { "quarter": "2017 Q3", "written": 400, "earned": 427.50 },
+          { "quarter": "2017 Q4", "written": 100, "earned": 52.50 },
+          { "quarter": "2018 Q1", "written": 125, "earned": 53.75 },
+          { "quarter": "2018 Q2", "written": 550, "earned": 528.75 },
+          { "quarter": "2018 Q3", "written": 475, "earned": 562.50 },
+          { "quarter": "2018 Q4", "written": 30, "earned": 59.00 }
+        ]
+      },
+              {
+          "name": "notes",
+          "type": "notes",
+          "data": "The company started writing business on January 1, 2017. The company stopped writing business on December 31, 2018. The quarterly earnings pattern was set by analyzing historical experience across the industry and is not uniform. All policies are annual and written on the first day of the quarter. No policy cancellations or mid-term adjustments."
+        }
+    ],
     "expected_answer": {
       "type": "multi_part_numeric",
       "parts": {
@@ -46,18 +57,30 @@
     "question_id": "EX5-F19-Q02",
     "domain": "ratemaking",
     "topic": "premiums",
-    "question_text": "Given the following policies for an insurance company, \n(a) Calculate the written premium for the fiscal year ending July 31, 2018.\n(b) Calculate the in-force premium as of December 15, 2018.\n(c) Calculate the 2018 calendar year written premium if Policy C is cancelled on March 31, 2018.",
-    "inputs": {
-      "policies": [
-        { "policy": "A", "effective_date": "2017-03-01", "expiration_date": "2018-02-28", "written_premium": 1200 },
-        { "policy": "B", "effective_date": "2017-06-01", "expiration_date": "2017-11-30", "written_premium": 1500 },
-        { "policy": "C", "effective_date": "2017-07-01", "expiration_date": "2018-06-30", "written_premium": 2000 },
-        { "policy": "D", "effective_date": "2017-10-01", "expiration_date": "2018-09-30", "written_premium": 750 },
-        { "policy": "E", "effective_date": "2018-01-01", "expiration_date": "2018-12-31", "written_premium": 900 },
-        { "policy": "F", "effective_date": "2018-04-01", "expiration_date": "2018-09-30", "written_premium": 1650 },
-        { "policy": "G", "effective_date": "2018-08-01", "expiration_date": "2019-07-31", "written_premium": 1350 }
-      ]
+    "question_text": {
+      "prompt": "Given the following policies for an insurance company:",
+      "type": "multi_part",
+      "parts": {
+        "a": "Calculate the written premium for the fiscal year ending July 31, 2018.",
+        "b": "Calculate the in-force premium as of December 15, 2018.",
+        "c": "Calculate the 2018 calendar year written premium if Policy C is cancelled on March 31, 2018."
+      }
     },
+    "inputs": [
+      {
+        "name": "policies",
+        "type": "table",
+        "data": [
+          { "policy": "A", "effective_date": "2017-03-01", "expiration_date": "2018-02-28", "written_premium": 1200 },
+          { "policy": "B", "effective_date": "2017-06-01", "expiration_date": "2017-11-30", "written_premium": 1500 },
+          { "policy": "C", "effective_date": "2017-07-01", "expiration_date": "2018-06-30", "written_premium": 2000 },
+          { "policy": "D", "effective_date": "2017-10-01", "expiration_date": "2018-09-30", "written_premium": 750 },
+          { "policy": "E", "effective_date": "2018-01-01", "expiration_date": "2018-12-31", "written_premium": 900 },
+          { "policy": "F", "effective_date": "2018-04-01", "expiration_date": "2018-09-30", "written_premium": 1650 },
+          { "policy": "G", "effective_date": "2018-08-01", "expiration_date": "2019-07-31", "written_premium": 1350 }
+        ]
+      }
+    ],
     "expected_answer": {
       "type": "multi_part_numeric",
       "parts": {
@@ -80,28 +103,79 @@
     "question_id": "EX5-F19-Q03a",
     "domain": "ratemaking",
     "topic": "credibility",
-    "question_text": "Calculate the credibility-weighted indicated rate change using the classical credibility approach and trended present rates as the complement of credibility. The loss experience is considered fully credible if there is a 90% probability that the observed experience is within 2.5% of its expected value.",
-    "inputs": {
-      "number_of_exposures": 20000,
-      "indicated_rate_change_before_credibility": 0.079,
-      "projected_frequency": 0.03,
-      "annual_loss_trend": -0.01,
-      "annual_premium_trend": 0.015,
-      "target_effective_date": "2019-01-01",
-      "prior_indicated_rate_change": 0.08,
-      "prior_implemented_rate_change": 0.035,
-      "prior_effective_date": "2017-01-01",
-      "credibility_probability": 0.90,
-      "credibility_range": 0.025,
-      "normal_distribution_table": [
-        { "p": 0.800, "z": 0.842 },
-        { "p": 0.850, "z": 1.036 },
-        { "p": 0.900, "z": 1.282 },
-        { "p": 0.950, "z": 1.645 },
-        { "p": 0.975, "z": 1.960 },
-        { "p": 0.990, "z": 2.326 }
-      ]
+    "question_text": {
+      "prompt": "Calculate the credibility-weighted indicated rate change using the classical credibility approach and trended present rates as the complement of credibility. The loss experience is considered fully credible if there is a 90% probability that the observed experience is within 2.5% of its expected value.",
+      "type": "single_part"
     },
+    "inputs": [
+      {
+        "name": "number_of_exposures",
+        "type": "single_value",
+        "data": 20000
+      },
+      {
+        "name": "indicated_rate_change_before_credibility",
+        "type": "single_value",
+        "data": 0.079
+      },
+      {
+        "name": "projected_frequency",
+        "type": "single_value",
+        "data": 0.03
+      },
+      {
+        "name": "annual_loss_trend",
+        "type": "single_value",
+        "data": -0.01
+      },
+      {
+        "name": "annual_premium_trend",
+        "type": "single_value",
+        "data": 0.015
+      },
+      {
+        "name": "target_effective_date",
+        "type": "single_value",
+        "data": "2019-01-01"
+      },
+      {
+        "name": "prior_indicated_rate_change",
+        "type": "single_value",
+        "data": 0.08
+      },
+      {
+        "name": "prior_implemented_rate_change",
+        "type": "single_value",
+        "data": 0.035
+      },
+      {
+        "name": "prior_effective_date",
+        "type": "single_value",
+        "data": "2017-01-01"
+      },
+      {
+        "name": "credibility_probability",
+        "type": "single_value",
+        "data": 0.90
+      },
+      {
+        "name": "credibility_range",
+        "type": "single_value",
+        "data": 0.025
+      },
+      {
+        "name": "normal_distribution_table",
+        "type": "table",
+        "data": [
+          { "p": 0.800, "z": 0.842 },
+          { "p": 0.850, "z": 1.036 },
+          { "p": 0.900, "z": 1.282 },
+          { "p": 0.950, "z": 1.645 },
+          { "p": 0.975, "z": 1.960 },
+          { "p": 0.990, "z": 2.326 }
+        ]
+      }
+    ],
     "expected_answer": {
       "type": "point_estimate",
       "value": 0.0248,
@@ -122,7 +196,14 @@
     "question_id": "EX5-F19-Q05ab",
     "domain": "ratemaking",
     "topic": "loss trend",
-    "question_text": "The following is to be used in developing a rate indication effective January 1, 2021:\n- Indication is based on accident year experience\n- Historical experience is from accident year 2018\n- Annual loss trend is +2%\n\n(a) Calculate the appropriate loss trend factor to trend from 7/1/2018 to 1/1/2022.\n(b) Calculate the appropriate loss trend factor to trend from 1/1/2019 to 1/1/2022.",
+    "question_text": {
+      "prompt": "The following is to be used in developing a rate indication effective January 1, 2021:\n- Indication is based on accident year experience\n- Historical experience is from accident year 2018\n- Annual loss trend is +2%",
+      "type": "multi_part",
+      "parts": {
+        "a": "Calculate the appropriate loss trend factor to trend from 7/1/2018 to 1/1/2022.",
+        "b": "Calculate the appropriate loss trend factor to trend from 1/1/2019 to 1/1/2022."
+      }
+    },
     "expected_answer": {
       "type": "multi_part_numeric",
       "parts": {
