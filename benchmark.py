@@ -1,4 +1,4 @@
-[
+benchmark = [
     {
         "id": "dummy_no_input",
         "source_exam": "",

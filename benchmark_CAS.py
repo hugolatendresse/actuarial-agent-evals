@@ -170,7 +170,8 @@ benchmark_cas = [
                 "type": "single_value",
                 "data": "2017-01-01",
             },
-            {"name": "credibility_probability", "type": "single_value", "data": 0.90},
+            {"name": "credibility_probability",
+                "type": "single_value", "data": 0.90},
             {"name": "credibility_range", "type": "single_value", "data": 0.025},
             {
                 "name": "normal_distribution_table",
@@ -290,7 +291,8 @@ benchmark_cas = [
             },
             {"name": "annual_loss_trend", "type": "single_value", "data": 0.04},
             {"name": "annual_premium_trend", "type": "single_value", "data": 0.03},
-            {"name": "expected_loss_alae_ratio", "type": "single_value", "data": 0.60},
+            {"name": "expected_loss_alae_ratio",
+                "type": "single_value", "data": 0.60},
             {"name": "variable_expense_ratio", "type": "single_value", "data": 0.30},
             {
                 "name": "profit_contingencies_provision",
@@ -852,7 +854,8 @@ benchmark_cas = [
                 ],
             },
             {"name": "expected_claims_ratio", "type": "single_value", "data": 0.45},
-            {"name": "notes", "type": "notes", "data": "All policies are claims-made."},
+            {"name": "notes", "type": "notes",
+                "data": "All policies are claims-made."},
         ],
         "expected_answer": {"type": "point_estimate", "value": 3800, "tolerance": 60},
         "source": "CAS Exam 5, Fall 2019, Question 24a",
@@ -896,7 +899,8 @@ benchmark_cas = [
                     {"interval": "21-24 months", "percent_paid": 0.05},
                 ],
             },
-            {"name": "actual_net_paid_15_18", "type": "single_value", "data": 1450000},
+            {"name": "actual_net_paid_15_18",
+                "type": "single_value", "data": 1450000},
             {"name": "quota_share_ceded", "type": "single_value", "data": 0.30},
             {
                 "name": "notes",
@@ -1549,7 +1553,8 @@ benchmark_cas = [
                 "name": "cumulative_reported_claim_counts",
                 "type": "table",
                 "data": [
-                    {"accident_year": 2015, "12": 250, "24": 238, "36": 245, "48": 260},
+                    {"accident_year": 2015, "12": 250,
+                        "24": 238, "36": 245, "48": 260},
                     {
                         "accident_year": 2016,
                         "12": 275,
@@ -2424,8 +2429,10 @@ benchmark_cas = [
                 "name": "cumulative_paid_ALAE",
                 "type": "table",
                 "data": [
-                    {"accident_year": 2015, "12": 77000, "24": 316000, "36": 512000, "48": 571000},
-                    {"accident_year": 2016, "12": 81000, "24": 337000, "36": 517000, "48": None},
+                    {"accident_year": 2015, "12": 77000,
+                        "24": 316000, "36": 512000, "48": 571000},
+                    {"accident_year": 2016, "12": 81000,
+                        "24": 337000, "36": 517000, "48": None},
                     {
                         "accident_year": 2017,
                         "12": 75000,
