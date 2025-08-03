@@ -68,19 +68,49 @@ class SolutionFileHandler(FileSystemEventHandler):
         self.file_path = None
         self.file_ready = False
 
+    def _has_content_below_marker(self, file_path):
+        """Check if there's meaningful content below the marker line."""
+        marker_line = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            
+            for i, line in enumerate(lines):
+                if marker_line in line:
+                    remaining_lines = lines[i+1:]
+                    content_lines = [line.strip() for line in remaining_lines if line.strip()]
+                    return len(content_lines) > 0
+            return False
+            
+        except (IOError, UnicodeDecodeError):
+            return False
+
     def on_created(self, event):
         """Called when a file or directory is created."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
-            print(f"\nDetected '{self.filename_to_watch}' saved.")
+            print(f"\nDetected '{self.filename_to_watch}' created.")
             self.file_path = event.src_path
-            self.file_ready = True
+            
+            # Check if there's actual content below the marker
+            if self._has_content_below_marker(event.src_path):
+                print("Content found below marker. File is ready.")
+                self.file_ready = True
+            else:
+                print("No content below marker yet. Waiting for content...")
 
     def on_modified(self, event):
         """Called when a file is modified (e.g., saved again)."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
             print(f"Detected '{self.filename_to_watch}' has been saved.")
             self.file_path = event.src_path
-            self.file_ready = True
+            
+            # Check if there's actual content below the marker
+            if self._has_content_below_marker(event.src_path):
+                print("Content found below marker. File is ready.")
+                self.file_ready = True
+            else:
+                print("No content below marker yet. Waiting for content...")
 
 
 # --- Test Harness Engine ---
