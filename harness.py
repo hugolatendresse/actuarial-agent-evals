@@ -129,6 +129,8 @@ class IDETestHarness:
                 raise NotImplementedError()
             elif input_dict["type"] == "single_value":
                 single_values[input_dict["name"]] = input_dict["data"]
+            elif input_dict["type"] == "single_date":
+                single_values[input_dict["name"]] = f'"{input_dict["data"]}"'
             elif input_dict["type"] == "notes":
                 notes.append(input_dict["data"])
             else:

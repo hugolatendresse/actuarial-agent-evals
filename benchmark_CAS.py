@@ -152,7 +152,7 @@ benchmark_cas = [
             {"name": "annual_premium_trend", "type": "single_value", "data": 0.015},
             {
                 "name": "target_effective_date",
-                "type": "single_value",
+                "type": "single_date",
                 "data": "2019-01-01",
             },
             {
@@ -167,7 +167,7 @@ benchmark_cas = [
             },
             {
                 "name": "prior_effective_date",
-                "type": "single_value",
+                "type": "single_date",
                 "data": "2017-01-01",
             },
             {"name": "credibility_probability",
