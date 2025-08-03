@@ -1,4 +1,10 @@
 """
+How to use:
+- run harness with `python harness.py`
+- Enter any dummy name (I type a couple characters)
+- Every time it stops and waits, click into cursor, do ctrl+N to start a new chat, ctrl+V to paste what harness put in our keyboard, and enter to let cursor run. 
+
+
 EXAMPLE USAGE:
 python harness.py
 """
