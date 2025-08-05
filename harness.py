@@ -1,9 +1,24 @@
 """
-How to use:
-- run harness with `python harness.py`
-- Enter any dummy name (I type a couple characters)
-- Every time it stops and waits, click into cursor, do ctrl+N to start a new chat, ctrl+V to paste what harness put in our keyboard, and enter to let cursor run. 
+Actuarial AI Test Harness with Cursor UI Agent (CUA) Integration
 
+How to use:
+1. Run harness with `python harness.py`
+2. Choose whether to use CUA automation or manual mode
+3. Enter the name of the AI system you're testing (e.g., "Cursor")
+
+AUTOMATION MODE (CUA):
+- CUA will automatically detect Cursor's chat input box
+- Automatically start new chats (Ctrl+N)
+- Automatically paste and submit prompts
+- Monitor file system for solution files
+- Falls back to manual mode if automation fails
+
+MANUAL MODE:
+- Every time it stops and waits, manually:
+  - Click into Cursor
+  - Press Ctrl+N to start a new chat
+  - Press Ctrl+V to paste the prompt (already in clipboard)
+  - Press Enter to submit
 
 EXAMPLE USAGE:
 python harness.py
@@ -23,6 +38,14 @@ from watchdog.events import FileSystemEventHandler
 from typing import Dict, Any, List
 
 from utils import parse_multi_part_output
+
+# CUA integration
+try:
+    from cua import create_harness_integrator
+    CUA_AVAILABLE = True
+except ImportError:
+    print("Warning: CUA not available. Install CUA dependencies to enable automation.")
+    CUA_AVAILABLE = False
 
 # TODO format other than .json for benchmarks to allow multi line strings. py files would be good.
 # Can also link to py files and text files in the benchmark.json file.
@@ -116,10 +139,36 @@ class SolutionFileHandler(FileSystemEventHandler):
 # --- Test Harness Engine ---
 
 class IDETestHarness:
-    def __init__(self, benchmark_data):
+    def __init__(self, benchmark_data, enable_cua_automation=True):
         if not os.path.exists(RESULTS_DIR):
             os.makedirs(RESULTS_DIR)
         self.benchmark_data = benchmark_data
+        
+        # Initialize CUA automation
+        self.use_automation = enable_cua_automation and CUA_AVAILABLE
+        self.cua_integrator = None
+        
+        if self.use_automation:
+            try:
+                self.cua_integrator = create_harness_integrator(enable_automation=True)
+                print("\n" + "=" * 50)
+                self.cua_integrator.print_status()
+                print("=" * 50)
+                
+                # Validate Cursor is ready
+                print("Validating Cursor is ready for automation...")
+                if self.cua_integrator.validate_cursor_responsiveness():
+                    print("Cursor validation passed - automation ready!")
+                else:
+                    print("Warning: Cursor validation failed - will use manual fallback")
+                    
+            except Exception as e:
+                print(f"Warning: CUA initialization failed: {e}")
+                print("Falling back to manual mode")
+                self.use_automation = False
+                self.cua_integrator = None
+        else:
+            print("Using manual mode for Cursor interactions")
 
     def calculate_question_score(self, test_case: Dict[str, Any], passed_result) -> tuple:
         """
@@ -276,12 +325,31 @@ class IDETestHarness:
             print(prompt)
             print("--------------")
 
-        print("\n--- ACTION REQUIRED ---")
-        print(f"Workspace folder: {os.path.abspath(workspace_dir)}")
-        print(f"1. Open the folder above in '{ide_name}'.")
-        print("2. Generate the solution using the prompt from your clipboard.")
-        print(
-            f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
+        # Use CUA automation or manual mode
+        automation_used = False
+        if self.use_automation and self.cua_integrator:
+            print("\n=== CUA AUTOMATION ===")
+            print(f"Workspace folder: {os.path.abspath(workspace_dir)}")
+            print(f"Target file: {ANSWER_FILENAME}")
+            
+            automation_success = self.cua_integrator.automated_cursor_interaction(
+                prompt=prompt,
+                new_chat=True  # Always start fresh chat for each test
+            )
+            
+            if automation_success:
+                print("Automated interaction completed successfully")
+                automation_used = True
+            else:
+                print("Warning: Automated interaction failed, but continuing with file monitoring")
+        else:
+            print("\n--- MANUAL ACTION REQUIRED ---")
+            print(f"Workspace folder: {os.path.abspath(workspace_dir)}")
+            print(f"1. Open the folder above in '{ide_name}'.")
+            print("2. Generate the solution using the prompt from your clipboard.")
+            print(
+                f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
+
         print(f"\n< Waiting for {ANSWER_FILENAME} to be saved... >")
 
         # Set up the file watcher
@@ -393,6 +461,7 @@ class IDETestHarness:
             "actual_output": program_output_str,
             "expected_output": test_case["expected_answer"],
             "execution_error": execution_error,
+            "automation_used": automation_used,
         }
 
     def run_all_tests(self, ide_name: str):
@@ -435,8 +504,15 @@ class IDETestHarness:
             print(f"{key}: {result['points_earned']:.2f}/{result['total_possible_points']:.2f} {status_str}")
         
         percentage = (total_points_earned / total_points_possible * 100) if total_points_possible > 0 else 0
+        
+        # Calculate automation statistics
+        automation_count = sum(1 for result in all_results.values() if result.get('automation_used', False))
+        total_tests = len(all_results)
+        
         print("="*50)
         print(f"TOTAL SCORE: {total_points_earned:.2f}/{total_points_possible:.2f} ({percentage:.1f}%)")
+        if self.use_automation:
+            print(f"AUTOMATION STATS: {automation_count}/{total_tests} tests automated ({automation_count/total_tests*100:.1f}%)")
         print("="*50)
         
         summary_data = {
@@ -444,6 +520,10 @@ class IDETestHarness:
             "total_points_earned": total_points_earned,
             "total_points_possible": total_points_possible,
             "percentage_score": percentage,
+            "automation_enabled": self.use_automation,
+            "tests_automated": automation_count,
+            "total_tests": total_tests,
+            "automation_percentage": (automation_count/total_tests*100) if total_tests > 0 else 0,
             "individual_results": all_results
         }
         
@@ -456,7 +536,16 @@ class IDETestHarness:
 if __name__ == '__main__':
     # from benchmark import benchmark as benchmark_data
     from benchmark_CAS import benchmark_cas as benchmark_data
-    harness = IDETestHarness(benchmark_data=benchmark_data)
+    
+    # Ask user about automation preference
+    if CUA_AVAILABLE:
+        use_automation = input("Use CUA automation? (y/n, default=y): ").strip().lower()
+        enable_automation = use_automation != 'n'
+    else:
+        print("CUA automation not available. Using manual mode.")
+        enable_automation = False
+    
+    harness = IDETestHarness(benchmark_data=benchmark_data, enable_cua_automation=enable_automation)
 
     # You would run this script once for each IDE you want to test.
     # For example, first for "Cursor", then re-run for "VSCode_Copilot".
