@@ -1,2 +1,5 @@
 ide_results/
+.env
 **__pycache__/
+*.png
+venv/
