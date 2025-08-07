@@ -1,12 +1,23 @@
 """
 How to use:
-- run harness with `python harness.py`
-- Enter any dummy name (I type a couple characters)
-- Every time it stops and waits, click into cursor, do ctrl+N to start a new chat, ctrl+V to paste what harness put in our keyboard, and enter to let cursor run. 
 
+MANUAL MODE (default):
+- run harness with `python harness.py` or `python harness.py --mode manual`
+- Enter the AI name when prompted (or use --ide flag)
+- Every time it stops and waits, click into Cursor, do Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start a new chat,
+  Cmd+V or Ctrl+V to paste what harness put in clipboard, and enter to let Cursor run.
+
+AUTO MODE (automated):
+- run harness with `python harness.py --mode auto`
+- Enter the AI name when prompted (or use --ide flag)  
+- When prompted, ensure Cursor is the active window and press Enter
+- The system will automatically send the key sequence to paste and submit the prompt
+- Falls back to manual instructions if automation fails
 
 EXAMPLE USAGE:
-python harness.py
+python harness.py --mode manual
+python harness.py --mode auto --ide Cursor
+python harness.py --mode auto
 """
 
 import json
@@ -15,14 +26,134 @@ import csv
 import os
 import shutil
 import time
+import platform
+import argparse
 import pandas as pd
 import numpy as np
 import pyperclip
+import pyautogui
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import Dict, Any, List
 
 from utils import parse_multi_part_output
+
+
+def get_platform_keys():
+    """Get the correct key combinations for the current platform."""
+    system = platform.system().lower()
+    if system == 'darwin':  # macOS
+        return {
+            'chat_activate': ['command', 'l'],
+            'new_chat': ['command', 'n'],
+            'paste': ['command', 'v']
+        }
+    else:  # Windows/Linux
+        return {
+            'chat_activate': ['ctrl', 'l'],
+            'new_chat': ['ctrl', 'n'],
+            'paste': ['ctrl', 'v']
+        }
+
+
+def automate_cursor_input(prompt_text, is_first_question=True, delay_before=2.0, delay_between=1.0):
+    """Automate the process of pasting prompt into Cursor.
+    
+    Args:
+        prompt_text: The text to paste (should already be in clipboard)
+        is_first_question: Whether this is the first question (needs Cmd+L to activate)
+        delay_before: Seconds to wait before starting automation
+        delay_between: Seconds to wait between key presses
+    """
+    keys = get_platform_keys()
+    
+    print("Automating Cursor input...")
+    
+    # Countdown
+    for i in range(int(delay_before), 0, -1):
+        print(f"   Starting in {i}...")
+        time.sleep(1.0)
+    
+    try:
+        # Try to activate Cursor application first (macOS specific)
+        system = platform.system().lower()
+        if system == 'darwin':
+            print("Attempting to activate Cursor application...")
+            # Use AppleScript to activate Cursor
+            try:
+                subprocess.run(['osascript', '-e', 'tell application "Cursor" to activate'], 
+                             check=False, capture_output=True)
+                time.sleep(1.0)  # Give time for app to activate
+            except Exception as e:
+                print(f"Could not activate Cursor app: {e}")
+                print("Please make sure Cursor is manually focused.")
+        
+        # Only activate Cursor chat box for the first question
+        if is_first_question:
+            print("   → Activating chat...")
+            chat_keys = keys['chat_activate']
+            
+            # Use keyDown/keyUp with delays for reliable key combinations
+            pyautogui.keyDown(chat_keys[0])
+
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyDown(chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(chat_keys[0])
+            
+            # Give time for focus to switch
+            time.sleep(delay_between)
+        
+        # Create new chat
+        print("   → Creating new chat...")
+        new_chat_keys = keys['new_chat']
+        
+        pyautogui.keyDown(new_chat_keys[0])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyDown(new_chat_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(new_chat_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(new_chat_keys[0])
+        
+        # Give time for confirmation dialog to appear if needed
+        time.sleep(delay_between)
+        
+        # Press Enter to confirm new chat if dialog appears
+        print("   → Confirming new chat...")
+        pyautogui.press('enter')
+        
+        # Give more time for new chat to be created
+        time.sleep(delay_between)
+        
+        # Paste the prompt
+        print("   → Pasting prompt...")
+        paste_keys = keys['paste']
+        
+        pyautogui.keyDown(paste_keys[0])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyDown(paste_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(paste_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(paste_keys[0])
+        
+        time.sleep(delay_between)
+        
+        # Press Enter to submit
+        print("   → Submitting prompt...")
+        pyautogui.press('enter')
+        
+        print("Automation completed successfully!")
+        return True
+        
+    except Exception as e:
+        print(f"Automation failed: {e}")
+        print("Please manually paste the prompt from clipboard.")
+        return False
+
 
 # TODO format other than .json for benchmarks to allow multi line strings. py files would be good.
 # Can also link to py files and text files in the benchmark.json file.
@@ -86,10 +217,12 @@ class SolutionFileHandler(FileSystemEventHandler):
 # --- Test Harness Engine ---
 
 class IDETestHarness:
-    def __init__(self, benchmark_data):
+    def __init__(self, benchmark_data, mode='manual'):
         if not os.path.exists(RESULTS_DIR):
             os.makedirs(RESULTS_DIR)
         self.benchmark_data = benchmark_data
+        self.mode = mode
+        self.first_question = True  # Track if this is the first question
 
     def _load_benchmark(self) -> List[Dict[str, Any]]:
         """Loads the py benchmark file."""
@@ -217,9 +350,38 @@ class IDETestHarness:
         print("\n--- ACTION REQUIRED ---")
         print(f"Workspace folder: {os.path.abspath(workspace_dir)}")
         print(f"1. Open the folder above in '{ide_name}'.")
-        print("2. Generate the solution using the prompt from your clipboard.")
-        print(
-            f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
+        
+        if self.mode == 'auto':
+            print("2. Ensure Cursor is the active window (click on it).")
+            print("3. The system will automatically:")
+            print("   - Activate Cursor chat (Cmd+L)")
+            print("   - Create a new chat (Cmd+N)")
+            print("   - Paste the prompt (Cmd+V)")
+            print("   - Submit the prompt (Enter)")
+            print(f"4. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder when Cursor generates it.")
+            
+            # Attempt automation (no user prompt needed - already confirmed at start)
+            automation_success = automate_cursor_input(prompt, is_first_question=self.first_question)
+            
+            # After first question, set flag to False
+            if self.first_question:
+                self.first_question = False
+            
+            if not automation_success:
+                print("\nFalling back to manual mode...")
+                print("Please manually:")
+                print("- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate Cursor chat")
+                print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                print("- Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
+                print("- Press Enter to submit")
+        else:
+            print("2. Generate the solution using the prompt from your clipboard:")
+            print("   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate Cursor chat")
+            print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+            print("   - Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
+            print("   - Press Enter to submit")
+            print(f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
+        
         print(f"\n< Waiting for {ANSWER_FILENAME} to be saved... >")
 
         # Set up the file watcher
@@ -330,6 +492,17 @@ class IDETestHarness:
 
     def run_all_tests(self, ide_name: str):
         """Runs all tests for a given IDE."""
+        # One-time setup for auto mode
+        if self.mode == 'auto':
+            print("\n=== AUTO MODE SETUP ===")
+            print("Please prepare Cursor for automation:")
+            print("1. Make sure Cursor is open and visible")
+            print("2. Click on Cursor to ensure it's the active window")
+            print("3. The automation will handle all questions automatically")
+            print("\nOnce you press Enter, the automation will run for ALL test cases.")
+            input("Press Enter when Cursor is ready and you're prepared for full automation...")
+            print("\n🤖 Starting automated test run...\n")
+        
         all_results = {}
         for i, test_case in enumerate(self.benchmark_data):
             question_id = test_case.get('question_id')
@@ -350,13 +523,30 @@ class IDETestHarness:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='AI IDE Test Harness')
+    parser.add_argument('--mode', choices=['auto', 'manual'], default='manual',
+                        help='Mode of operation: auto (automated Cursor input) or manual (default)')
+    parser.add_argument('--ide', type=str, 
+                        help='Name of the AI IDE to test (e.g., Cursor, copilot, etc.)')
+    
+    args = parser.parse_args()
+    
     # from benchmark import benchmark as benchmark_data
     from benchmark_CAS import benchmark_cas as benchmark_data
-    harness = IDETestHarness(benchmark_data=benchmark_data)
+    harness = IDETestHarness(benchmark_data=benchmark_data, mode=args.mode)
+
+    print(f"Running in {args.mode.upper()} mode")
+    if args.mode == 'auto':
+        print("Automation will handle Cursor input automatically.")
+        # Set pyautogui safety settings
+        pyautogui.FAILSAFE = True  # Move mouse to corner to abort
+        pyautogui.PAUSE = 0.5  # Default pause between actions
+    else:
+        print("Manual mode: you will need to paste prompts manually.")
 
     # You would run this script once for each IDE you want to test.
     # For example, first for "Cursor", then re-run for "VSCode_Copilot".
-    ide_to_test = input(
+    ide_to_test = args.ide or input(
         "Enter the name of the AI you are testing (e.g., Cursor, copilot, etc.): ")
     if ide_to_test:
         harness.run_all_tests(ide_to_test)
