@@ -199,19 +199,49 @@ class SolutionFileHandler(FileSystemEventHandler):
         self.file_path = None
         self.file_ready = False
 
+    def _has_content_below_marker(self, file_path):
+        """Check if there's meaningful content below the marker line."""
+        marker_line = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            
+            for i, line in enumerate(lines):
+                if marker_line in line:
+                    remaining_lines = lines[i+1:]
+                    content_lines = [line.strip() for line in remaining_lines if line.strip()]
+                    return len(content_lines) > 0
+            return False
+            
+        except (IOError, UnicodeDecodeError):
+            return False
+
     def on_created(self, event):
         """Called when a file or directory is created."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
-            print(f"\nDetected '{self.filename_to_watch}' saved.")
+            print(f"\nDetected '{self.filename_to_watch}' created.")
             self.file_path = event.src_path
-            self.file_ready = True
+            
+            # Check if there's actual content below the marker
+            if self._has_content_below_marker(event.src_path):
+                print("Content found below marker. File is ready.")
+                self.file_ready = True
+            else:
+                print("No content below marker yet. Waiting for content...")
 
     def on_modified(self, event):
         """Called when a file is modified (e.g., saved again)."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
             print(f"Detected '{self.filename_to_watch}' has been saved.")
             self.file_path = event.src_path
-            self.file_ready = True
+            
+            # Check if there's actual content below the marker
+            if self._has_content_below_marker(event.src_path):
+                print("Content found below marker. File is ready.")
+                self.file_ready = True
+            else:
+                print("No content below marker yet. Waiting for content...")
 
 
 # --- Test Harness Engine ---
@@ -223,6 +253,33 @@ class IDETestHarness:
         self.benchmark_data = benchmark_data
         self.mode = mode
         self.first_question = True  # Track if this is the first question
+
+    def calculate_question_score(self, test_case: Dict[str, Any], passed_result) -> tuple:
+        """
+        Calculate the score for a single question.
+        Returns (points_earned, total_possible_points)
+        """
+        question_point_value = test_case.get("question_point_value", 0)
+        
+        if isinstance(question_point_value, (int, float)):
+            if passed_result is True:
+                return (question_point_value, question_point_value)
+            else:
+                return (0, question_point_value)
+        
+        elif isinstance(question_point_value, dict):
+            total_possible = sum(question_point_value.values())
+            points_earned = 0
+            
+            if isinstance(passed_result, dict):
+                for part_key, part_passed in passed_result.items():
+                    if part_passed and part_key in question_point_value:
+                        points_earned += question_point_value[part_key]
+            
+            return (points_earned, total_possible)
+        
+        else:
+            return (0, 0)
 
     def _load_benchmark(self) -> List[Dict[str, Any]]:
         """Loads the py benchmark file."""
@@ -262,8 +319,13 @@ class IDETestHarness:
                 raise NotImplementedError()
             elif input_dict["type"] == "single_value":
                 single_values[input_dict["name"]] = input_dict["data"]
+            elif input_dict["type"] == "single_date":
+                single_values[input_dict["name"]] = f'"{input_dict["data"]}"'
             elif input_dict["type"] == "notes":
-                notes.append(input_dict["data"])
+                if isinstance(input_dict["data"], list):
+                    notes.extend(input_dict["data"])
+                else:
+                    notes.append(input_dict["data"])
             else:
                 raise ValueError(
                     f"Unsupported input type: {input_dict['type']}")
@@ -479,11 +541,16 @@ class IDETestHarness:
             # except Exception as e:
             #     print(f"Verification failed: {e}")
 
+        # Calculate score for this question
+        points_earned, total_possible = self.calculate_question_score(test_case, passed)
+        
         # 5. Log results
         return {
             "test_id": test_case.get("question_id"),
             "ide_name": ide_name,
             "passed": passed,
+            "points_earned": points_earned,
+            "total_possible_points": total_possible,
             "prompt": prompt,
             "actual_output": program_output_str,
             "expected_output": test_case["expected_answer"],
@@ -504,6 +571,9 @@ class IDETestHarness:
             print("\n🤖 Starting automated test run...\n")
         
         all_results = {}
+        total_points_earned = 0
+        total_points_possible = 0
+        
         for i, test_case in enumerate(self.benchmark_data):
             question_id = test_case.get('question_id')
             print(
@@ -512,14 +582,48 @@ class IDETestHarness:
             all_results[question_id] = result
             # status = "PASSED" if result["passed"] else "FAILED" # TODO determine what to conclude for multipart questions
             # print(f"--- Result: {status} ---")
+            
+            # Add to running totals
+            total_points_earned += result["points_earned"]
+            total_points_possible += result["total_possible_points"]
 
+            print(f"Question Score: {result['points_earned']:.2f}/{result['total_possible_points']:.2f}")
+
+        # Print final summary
+        print("\n" + "="*50)
+        print("FINAL SCORE SUMMARY")
+        print("="*50)
         for key, result in all_results.items():
             print(f"Test ID: {key}, Results: {result['passed']}")
+            status_str = ""
+            if isinstance(result['passed'], dict):
+                passed_parts = sum(1 for v in result['passed'].values() if v)
+                total_parts = len(result['passed'])
+                status_str = f"({passed_parts}/{total_parts} parts)"
+            elif result['passed']:
+                status_str = "PASSED"
+            else:
+                status_str = "FAILED"
+            
+            print(f"{key}: {result['points_earned']:.2f}/{result['total_possible_points']:.2f} {status_str}")
+        
+        percentage = (total_points_earned / total_points_possible * 100) if total_points_possible > 0 else 0
+        print("="*50)
+        print(f"TOTAL SCORE: {total_points_earned:.2f}/{total_points_possible:.2f} ({percentage:.1f}%)")
+        print("="*50)
+        
+        summary_data = {
+            "ide_name": ide_name,
+            "total_points_earned": total_points_earned,
+            "total_points_possible": total_points_possible,
+            "percentage_score": percentage,
+            "individual_results": all_results
+        }
+        
         results_path = os.path.join(RESULTS_DIR, f"summary_{ide_name}.json")
         with open(results_path, 'w') as f:
-            json.dump(all_results, f, indent=4)
-        print(
-            f"\nCompleted all tests for {ide_name}. Results saved to {results_path}")
+            json.dump(summary_data, f, indent=4)
+        print(f"\nCompleted all tests for {ide_name}. Results saved to {results_path}")
 
 
 if __name__ == '__main__':
