@@ -479,67 +479,91 @@ class IDETestHarness:
 
         # 4. Verify the result
         passed = False
-        # if not execution_error:
-        # try:
-        verification_type = test_case["expected_answer"]["type"]
-        if verification_type == "python_assertion":  # TODO probably broken with new benchmark format
-            actual_output_obj = eval(program_output_str)
-            expected_output_obj = eval(
-                test_case["verification"]["expected_output"])
-            eval_scope = {'actual': actual_output_obj,
-                          'expected': expected_output_obj, 'np': np}
-            exec(test_case["verification"]["evaluation_script"], eval_scope)
-            passed = True
-        elif verification_type == "text_output":  # TODO probably broken with new benchmark format
-            expected_output = test_case["verification"]["expected_output"]
-            # if isinstance(expected_output, str): # TODO do we need this?
-            # expected_output = expected_output.strip()
-            eval_scope = {'actual': program_output_str,
-                          'expected': expected_output, 'np': np}
-            exec(test_case["verification"]["evaluation_script"], eval_scope)
-            passed = True
-        elif verification_type == "point_estimate":
-            # TODO generalize
-            expected_value = test_case["expected_answer"]['value']
-            tolerance = test_case["expected_answer"]['tolerance']
-            # Get actual value by parsing the output from stdout
-            actual_value = float(program_output_str)
-            print("Expected value:", expected_value)
-            print("Tolerance:", tolerance)
-            print("Actual value:", actual_value)
-            if abs(actual_value - expected_value) <= tolerance:
-                print("Test passed!")
-                passed = True
-            else:
-                print(
-                    f"Test failed! Expected value within {tolerance} of {expected_value}, but got {actual_value}.")
-                passed = False
-        elif verification_type == "multi_part_numeric":
-            actual = parse_multi_part_output(program_output_str, list(
-                test_case["expected_answer"]["parts"].keys()))
-            expected = test_case["expected_answer"]["parts"]
-            passed = {}  # TODO those should be points? Out of 1? Out of 4?
-            for key in expected.keys():
-                if key not in actual:
-                    print(f"Missing key in actual output: {key}")
-                    passed[key] = False
-                    break
-                actual_val = actual[key]
-                expected_val = expected[key]['value']
-                if not np.isclose(actual_val, expected_val, atol=expected[key].get('tolerance', 1e-5)):
-                    print(
-                        f"Value for '{key}' does not match: expected {expected_val}, got {actual_val}")
-                    passed[key] = False  # TODO
-                else:
-                    print(
-                        f"Value for '{key}' matches! expected {expected_val}, got {actual_val}")
-                    passed[key] = True
-
+        
+        # Check for execution errors first
+        if execution_error or result.returncode != 0:
+            print("Test FAILED: Code execution error occurred")
+            if execution_error:
+                print(f"Error details: {execution_error}")
+            if result.returncode != 0:
+                print(f"Process exited with code: {result.returncode}")
+            passed = False
+        elif not program_output_str.strip():
+            print("Test FAILED: Code executed but produced no output")
+            passed = False
         else:
-            raise ValueError(
-                f"Unsupported verification type: {verification_type}")
-            # except Exception as e:
-            #     print(f"Verification failed: {e}")
+            # Code executed successfully, proceed with verification
+            try:
+                verification_type = test_case["expected_answer"]["type"]
+                if verification_type == "python_assertion":  # TODO probably broken with new benchmark format
+                    actual_output_obj = eval(program_output_str)
+                    expected_output_obj = eval(
+                        test_case["verification"]["expected_output"])
+                    eval_scope = {'actual': actual_output_obj,
+                              'expected': expected_output_obj, 'np': np}
+                    exec(test_case["verification"]["evaluation_script"], eval_scope)
+                    passed = True
+                elif verification_type == "text_output":  # TODO probably broken with new benchmark format
+                    expected_output = test_case["verification"]["expected_output"]
+                    # if isinstance(expected_output, str): # TODO do we need this?
+                    # expected_output = expected_output.strip()
+                    eval_scope = {'actual': program_output_str,
+                              'expected': expected_output, 'np': np}
+                    exec(test_case["verification"]["evaluation_script"], eval_scope)
+                    passed = True
+                elif verification_type == "point_estimate":
+                    # TODO generalize
+                    expected_value = test_case["expected_answer"]['value']
+                    tolerance = test_case["expected_answer"]['tolerance']
+                    # Get actual value by parsing the output from stdout
+                    try:
+                        actual_value = float(program_output_str)
+                        print("Expected value:", expected_value)
+                        print("Tolerance:", tolerance)
+                        print("Actual value:", actual_value)
+                        if abs(actual_value - expected_value) <= tolerance:
+                            print("Test passed!")
+                            passed = True
+                        else:
+                            print(
+                                f"Test failed! Expected value within {tolerance} of {expected_value}, but got {actual_value}.")
+                            passed = False
+                    except ValueError as e:
+                        print(f"Test FAILED: Could not parse output as number. Output was: '{program_output_str}'")
+                        print(f"Parsing error: {e}")
+                        passed = False
+                elif verification_type == "multi_part_numeric":
+                    try:
+                        actual = parse_multi_part_output(program_output_str, list(
+                            test_case["expected_answer"]["parts"].keys()))
+                        expected = test_case["expected_answer"]["parts"]
+                        passed = {}  # TODO those should be points? Out of 1? Out of 4?
+                        for key in expected.keys():
+                            if key not in actual:
+                                print(f"Missing key in actual output: {key}")
+                                passed[key] = False
+                                break
+                            actual_val = actual[key]
+                            expected_val = expected[key]['value']
+                            if not np.isclose(actual_val, expected_val, atol=expected[key].get('tolerance', 1e-5)):
+                                print(
+                                    f"Value for '{key}' does not match: expected {expected_val}, got {actual_val}")
+                                passed[key] = False  # TODO
+                            else:
+                                print(
+                                    f"Value for '{key}' matches! expected {expected_val}, got {actual_val}")
+                                passed[key] = True
+                    except Exception as e:
+                        print(f"Test FAILED: Could not parse multi-part output. Output was: '{program_output_str}'")
+                        print(f"Parsing error: {e}")
+                        passed = False
+
+                else:
+                    raise ValueError(
+                        f"Unsupported verification type: {verification_type}")
+            except Exception as e:
+                print(f"Test FAILED: Verification failed with error: {e}")
+                passed = False
 
         # Calculate score for this question
         points_earned, total_possible = self.calculate_question_score(test_case, passed)
