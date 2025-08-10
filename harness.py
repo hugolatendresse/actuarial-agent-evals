@@ -208,7 +208,8 @@ class SolutionFileHandler(FileSystemEventHandler):
                 lines = f.readlines()
             
             for i, line in enumerate(lines):
-                if marker_line in line:
+                # Strip whitespace for comparison to handle leading/trailing spaces
+                if marker_line in line.strip():
                     remaining_lines = lines[i+1:]
                     content_lines = [line.strip() for line in remaining_lines if line.strip()]
                     return len(content_lines) > 0
@@ -384,8 +385,8 @@ class IDETestHarness:
         # TODO only mention data if the problem has data to be included directly in the code.
         prompt.append("Do not modify the existing data.")
         prompt.append("3. The code provides path(s) to necessary data files. Import those csv files using pandas or any other method you prefer. You may need to investigate the file structure.")
-        prompt.append(
-            "4. The code should output the answer to the question in stdout. ")
+        prompt.append("4. The code should output the answer to the question in stdout. ")
+        prompt.append("5. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
 
         prompt.append("The answer should be in the following format:")
         if question_type == "multi_part":
@@ -396,7 +397,7 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("5. Do NOT run the script. I will do it on my own.\n")
+        prompt.append("6. Do NOT run the script. I will do it on my own.\n")
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
