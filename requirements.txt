@@ -2,4 +2,3 @@ pandas
 numpy
 pyperclip
 watchdog
-matplotlib
