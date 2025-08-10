@@ -101,8 +101,9 @@ def automate_ide_input(prompt_text, ide_name, is_first_question=True, delay_befo
                 print(f"Could not activate {ide_app_name} app: {e}")
                 print(f"Please make sure {ide_app_name} is manually focused.")
         
-        # Only activate chat box for the first question
-        if is_first_question:
+        # Activate chat box - for Continue, always activate; for others, only on first question
+        should_activate_chat = is_first_question or (ide_name and ide_name.lower() == 'continue')
+        if should_activate_chat:
             print("   → Activating chat...")
             chat_keys = keys['chat_activate']
             
@@ -462,15 +463,19 @@ class IDETestHarness:
             if not automation_success:
                 print("\nFalling back to manual mode...")
                 print("Please manually:")
-                print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
-                if ide_name.lower() != 'continue':
+                if ide_name.lower() == 'continue':
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+                else:
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
                     print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
                 print("- Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
                 print("- Press Enter to submit")
         else:
             print("2. Generate the solution using the prompt from your clipboard:")
-            print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
-            if ide_name.lower() != 'continue':
+            if ide_name.lower() == 'continue':
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+            else:
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
                 print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
             print("   - Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
             print("   - Press Enter to submit")
