@@ -3,3 +3,4 @@ ide_results/
 .cursor/
 .env
 venv/
+.aider*

@@ -408,10 +408,11 @@ class IDETestHarness:
         # TODO only mention data if the problem has data to be included directly in the code.
         prompt.append("Do not modify the existing data.")
         prompt.append("3. The code provides path(s) to necessary data files. Import those csv files using pandas or any other method you prefer. ")
-        prompt.append("4. If there are data files, you need to read them to undertstand the structure/content. Your code must run and pass the test on first attempt.")
-        prompt.append("5. The code should output the answer to the question in stdout. ")
-        prompt.append("6. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
-        prompt.append("7. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
+        prompt.append("4. If there are data files, you need to read them to understand the structure/content. Your code must run and pass the test on first attempt.")
+        prompt.append("5. Again, your code must run and pass the test on first attempt. Think through your response before editing the answer.py file and only edit the file once your are sure about your answer.")
+        prompt.append("6. The code should output the answer to the question in stdout. ")
+        prompt.append("7. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
+        prompt.append("8. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
 
         prompt.append("The answer should be in the following format:")
         if question_type == "multi_part":
@@ -422,7 +423,7 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("8. Do NOT run the script. I will do it on my own.\n")
+        prompt.append("9. Do NOT run the script. I will do it on my own.\n")
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
