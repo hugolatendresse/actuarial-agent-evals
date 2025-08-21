@@ -43,6 +43,12 @@ benchmark_cas = [
                 "d": {"value": 52.75, "tolerance": 0.01},
             },
         },
+        "question_point_value": {
+            "a": 0.5,
+            "b": 0.25,
+            "c": 0.5,
+            "d": 0.5,
+        },
         "source": "CAS Exam 5, Fall 2019, Question 1",
         "tags": [
             "written exposure",
@@ -123,6 +129,11 @@ benchmark_cas = [
                 "c": {"value": 3400.0, "tolerance": 0.01},
             },
         },
+        "question_point_value": {
+            "a": 0.25,
+            "b": 0.25,
+            "c": 0.5,
+        },
         "source": "CAS Exam 5, Fall 2019, Question 2",
         "tags": [
             "written premium",
@@ -152,7 +163,7 @@ benchmark_cas = [
             {"name": "annual_premium_trend", "type": "single_value", "data": 0.015},
             {
                 "name": "target_effective_date",
-                "type": "single_value",
+                "type": "single_date",
                 "data": "2019-01-01",
             },
             {
@@ -167,7 +178,7 @@ benchmark_cas = [
             },
             {
                 "name": "prior_effective_date",
-                "type": "single_value",
+                "type": "single_date",
                 "data": "2017-01-01",
             },
             {"name": "credibility_probability",
@@ -191,6 +202,7 @@ benchmark_cas = [
             "value": 0.0248,
             "tolerance": 0.0001,
         },
+        "question_point_value": 2.25,
         "source": "CAS Exam 5, Fall 2019, Question 3a",
         "tags": [
             "credibility",
@@ -219,6 +231,10 @@ benchmark_cas = [
                 "a": {"value": 1.072, "tolerance": 0.001},
                 "b": {"value": 1.061, "tolerance": 0.001},
             },
+        },
+        "question_point_value": {
+            "a": 0.5,
+            "b": 0.5,
         },
         "source": "CAS Exam 5, Fall 2019, Question 5 a & b",
         "tags": ["loss trend", "trend factor calculation", "ratemaking"],
@@ -319,6 +335,7 @@ benchmark_cas = [
             "value": -0.12,
             "tolerance": 0.001,
         },
+        "question_point_value": 4.5,
         "source": "CAS Exam 5, Fall 2019, Question 7",
         "tags": [
             "ratemaking",
@@ -360,6 +377,7 @@ benchmark_cas = [
             "value": 2.646,
             "tolerance": 0.001,
         },
+        "question_point_value": 1.75,
         "source": "CAS Exam 5, Fall 2019, Question 13",
         "tags": ["ILF", "limited average severity", "ratemaking"],
     },
@@ -452,6 +470,7 @@ benchmark_cas = [
             },
         ],
         "expected_answer": {"type": "point_estimate", "value": 3092.76, "tolerance": 1},
+        "question_point_value": 1.75,
         "source": "CAS Exam 5, Fall 2019, Question 18a",
         "tags": ["reserving", "development", "case outstanding"],
     },
@@ -522,6 +541,7 @@ benchmark_cas = [
             "value": 7932000,
             "tolerance": 600,
         },
+        "question_point_value": 3,
         "source": "CAS Exam 5, Fall 2019, Question 19",
         "tags": ["cape cod", "reserving", "development"],
     },
@@ -777,6 +797,7 @@ benchmark_cas = [
             "value": 1006000,
             "tolerance": 3000,
         },
+        "question_point_value": 2.25,
         "source": "CAS Exam 5, Fall 2019, Question 21",
         "tags": ["berquist-sherman", "reported development", "reserving"],
     },
@@ -858,6 +879,7 @@ benchmark_cas = [
                 "data": "All policies are claims-made."},
         ],
         "expected_answer": {"type": "point_estimate", "value": 3800, "tolerance": 60},
+        "question_point_value": 1.5,
         "source": "CAS Exam 5, Fall 2019, Question 24a",
         "tags": ["ulae", "kittel refinement", "reserving"],
     },
@@ -909,12 +931,13 @@ benchmark_cas = [
             },
         ],
         "expected_answer": {
-            "type": "multi_part",
+            "type": "multi_part_numeric",
             "parts": {
                 "i": {"value": 1081818, "tolerance": 1},
                 "ii": {"value": 1514545, "tolerance": 1},
             },
         },
+        "question_point_value": 1.25,
         "source": "CAS Exam 5, Fall 2019, Question 25a",
         "tags": ["paid development", "reserving", "quota share"],
     },
@@ -972,10 +995,10 @@ benchmark_cas = [
             {
                 "name": "notes",
                 "type": "notes",
-                "data": (
+                "data": [
                     "All policies remain in-force until their expiration dates.",
                     "An exposure is defined as one vehicle insured for one year.",
-                ),
+                ],
             },
         ],
         "expected_answer": {
@@ -986,6 +1009,12 @@ benchmark_cas = [
                 "c": {"value": 4.17, "tolerance": 0.01},
                 "d": {"value": 1.50, "tolerance": 0.01},
             },
+        },
+        "question_point_value": {
+            "a": 0.25,
+            "b": 0.5,
+            "c": 0.5,
+            "d": 0.25,
         },
         "source": "CAS Exam 5, Spring 2019, Question 1",
         "tags": [
@@ -1054,15 +1083,16 @@ benchmark_cas = [
             {
                 "name": "notes",
                 "type": "notes",
-                "data": (
+                "data": [
                     "No rate changes occurred in 2016 or 2018.",
                     "Rates will be in effect for one year.",
                     "All policies are semi-annual.",
                     "All policies are written uniformly throughout the year.",
-                ),
+                ],
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 4554236.00, "tolerance": 10000},
+        "expected_answer": {"type": "point_estimate", "value": 4554236.00, "tolerance": 10000},
+        "question_point_value": 1.75,
         "source": "CAS Exam 5, Spring 2019, Question 2 part a",
         "tags": [
             "trended premium",
@@ -1104,6 +1134,10 @@ benchmark_cas = [
                 "a": {"value": 0.04565, "tolerance": 0.0005},
                 "b": {"value": 0.17733, "tolerance": 0.0005},
             },
+        },
+        "question_point_value": {
+            "a": 1,
+            "b": 0.75,
         },
         "source": "CAS Exam 5, Spring 2019, Question 4 parts a & b",
         "tags": [
@@ -1281,10 +1315,11 @@ benchmark_cas = [
             },
         ],
         "expected_answer": {
-            "type": "numeric",
+            "type": "point_estimate",
             "value": 175238000.00,
             "tolerance": 500000,
         },
+        "question_point_value": 3.75,
         "source": "CAS Exam 5, Spring 2019, Question 5 part a",
         "tags": ["ultimate losses", "loss trending", "loss development", "ratemaking"],
     },
@@ -1363,6 +1398,11 @@ benchmark_cas = [
                 "b": {"value": 0.574, "tolerance": 0.001},
                 "d": {"value": 0.636, "tolerance": 0.001},
             },
+        },
+        "question_point_value": {
+            "a": 1.25,
+            "b": 0.25,
+            "d": 0.5,
         },
         "source": "CAS Exam 5, Spring 2019, Question 6 parts a, b & d",
         "tags": [
@@ -1456,6 +1496,12 @@ benchmark_cas = [
                 "b": {"value": 0.1126, "tolerance": 0.0001},
             },
         },
+        "question_point_value": {
+            "ai": 0.15,
+            "aii": 0.15,
+            "aiii": 0.15,
+            "b": 3.5,
+        },
         "source": "CAS Exam 5, Spring 2019, Question 7ab",
         "tags": [
             "Bornhuetter-Ferguson",
@@ -1536,6 +1582,10 @@ benchmark_cas = [
                 "ai": {"value": 25.97, "tolerance": 0.01},
                 "bi": {"value": 124.72, "tolerance": 0.01},
             },
+        },
+        "question_point_value": {
+            "ai": 0.375,
+            "bi": 0.375,
         },
         "source": "CAS Exam 5 Spring 2019 Question 13c",
         "tags": ["pure premium", "frequency", "severity", "ratemaking"],
@@ -1647,7 +1697,8 @@ benchmark_cas = [
                 "data": "There is no development after 48 months.",
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 1482000, "tolerance": 1000},
+        "expected_answer": {"type": "point_estimate", "value": 1482000, "tolerance": 1000},
+        "question_point_value": 2,
         "source": "CAS Exam 5, Spring 2019, Question 15a",
         "tags": [
             "IBNR",
@@ -1705,7 +1756,8 @@ benchmark_cas = [
                 "data": 1.10,
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 4892000, "tolerance": 1000},
+        "expected_answer": {"type": "point_estimate", "value": 4892000, "tolerance": 1000},
+        "question_point_value": 0.75,
         "source": "CAS Exam 5, Spring 2019, Question 16 part a",
         "tags": ["chain ladder", "reported development", "ultimate claims"],
     },
@@ -1782,9 +1834,14 @@ benchmark_cas = [
                 "name": "annual_industry_trends",
                 "type": "table",
                 "data": [
-                    {"region_1_frequency": -0.02, "region_1_severity": 0.10},
-                    {"region_2_frequency": 0, "region_2_severity": 0},
-                    {"combined_frequency": -0.01, "combined_severity": 0.05},
+                    {
+                        "region_1_frequency": -0.02,
+                        "region_1_severity": 0.10,
+                        "region_2_frequency": 0,
+                        "region_2_severity": 0,
+                        "combined_frequency": -0.01,
+                        "combined_severity": 0.05,
+                    }
                 ],
             },
             {
@@ -1806,13 +1863,13 @@ benchmark_cas = [
             {
                 "name": "notes",
                 "type": "notes",
-                "data": (
+                "data": [
                     "Equal amount of business is underwritten in both regions for the entire industry.",
                     "The company is subject to the same claims trends as the industry.",
                     "Each region is fully credible.",
                     "There have been no rate changes in 2017 or 2018.",
                     "There is no premium trend.",
-                ),
+                ],
             },
         ],
         "expected_answer": {
@@ -1821,6 +1878,10 @@ benchmark_cas = [
                 "a": {"value": 224224, "tolerance": 50},
                 "b": {"value": 821722, "tolerance": 400},
             },
+        },
+        "question_point_value": {
+            "a": 1,
+            "b": 1.25,
         },
         "source": "CAS Exam 5, Spring 2019, Question 17 parts a & b",
         "tags": ["Bornhuetter–Ferguson", "chain ladder", "loss trending", "ratemaking"],
@@ -1895,7 +1956,8 @@ benchmark_cas = [
                 ],
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 7835, "tolerance": 0},
+        "expected_answer": {"type": "point_estimate", "value": 7835, "tolerance": 0},
+        "question_point_value": 1.5,
         "source": "CAS Exam 5, Spring 2019, Question 18 part a",
         "tags": ["Cape Cod", "ultimate claims", "loss development", "ratemaking"],
     },
@@ -1950,6 +2012,10 @@ benchmark_cas = [
                 "i": {"value": 1549000, "tolerance": 1000},
                 "ii": {"value": 1487000, "tolerance": 1000},
             },
+        },
+        "question_point_value": {
+            "i": 0.625,
+            "ii": 0.625,
         },
         "source": "CAS Exam 5, Spring 2019, Question 19 parts i & ii",
         "tags": [
@@ -2023,7 +2089,12 @@ benchmark_cas = [
                 "data": 0.20,
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 101658, "tolerance": 100},
+        "expected_answer": {
+            "type": "point_estimate",
+            "value": 101658,
+            "tolerance": 100,
+        },
+        "question_point_value": 1.5,
         "source": "CAS Exam 5, Spring 2019, Question 20 part a",
         "tags": ["tail severity", "incremental claims", "severity trend", "ratemaking"],
     },
@@ -2272,7 +2343,12 @@ benchmark_cas = [
                 ],
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 1718596, "tolerance": 100},
+        "expected_answer": {
+            "type": "point_estimate",
+            "value": 1718596,
+            "tolerance": 100,
+        },
+        "question_point_value": 2.5,
         "source": "CAS Exam 5, Spring 2019, Question 22",
         "tags": [
             "reported development",
@@ -2378,7 +2454,12 @@ benchmark_cas = [
                 ],
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 10250000, "tolerance": 10000},
+        "expected_answer": {
+            "type": "point_estimate",
+            "value": 10250000,
+            "tolerance": 10000,
+        },
+        "question_point_value": 1.5,
         "source": "CAS Exam 5, Spring 2019, Question 23",
         "tags": ["IBNR", "retention", "reported development", "excess of loss"],
     },
@@ -2429,10 +2510,20 @@ benchmark_cas = [
                 "name": "cumulative_paid_ALAE",
                 "type": "table",
                 "data": [
-                    {"accident_year": 2015, "12": 77000,
-                        "24": 316000, "36": 512000, "48": 571000},
-                    {"accident_year": 2016, "12": 81000,
-                        "24": 337000, "36": 517000, "48": None},
+                    {
+                        "accident_year": 2015,
+                        "12": 77000,
+                        "24": 316000,
+                        "36": 512000,
+                        "48": 571000,
+                    },
+                    {
+                        "accident_year": 2016,
+                        "12": 81000,
+                        "24": 337000,
+                        "36": 517000,
+                        "48": None,
+                    },
                     {
                         "accident_year": 2017,
                         "12": 75000,
@@ -2465,7 +2556,12 @@ benchmark_cas = [
                 "data": ["No development beyond 48 months."],
             },
         ],
-        "expected_answer": {"type": "numeric", "value": 595700, "tolerance": 100},
+        "expected_answer": {
+            "type": "point_estimate",
+            "value": 595700,
+            "tolerance": 100,
+        },
+        "question_point_value": 1.25,
         "source": "CAS Exam 5, Spring 2019, Question 24 part a",
         "tags": ["ALAE", "multiplicative ratio", "reported development", "ratemaking"],
     },
