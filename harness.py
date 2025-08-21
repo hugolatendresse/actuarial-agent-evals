@@ -4,20 +4,22 @@ How to use:
 MANUAL MODE (default):
 - run harness with `python harness.py` or `python harness.py --mode manual`
 - Enter the AI name when prompted (or use --ide flag)
-- Every time it stops and waits, click into Cursor, do Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start a new chat,
-  Cmd+V or Ctrl+V to paste what harness put in clipboard, and enter to let Cursor run.
+- Every time it stops and waits, click into the IDE, activate chat, and paste the prompt
+- For Cursor: Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start chat, then Cmd+N/Ctrl+N for new chat
+- For Continue: Only Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start chat (no new chat needed)
 
 AUTO MODE (automated):
 - run harness with `python harness.py --mode auto`
+- Only supported for Cursor and Continue IDEs
 - Enter the AI name when prompted (or use --ide flag)  
-- When prompted, ensure Cursor is the active window and press Enter
-- The system will automatically send the key sequence to paste and submit the prompt
+- When prompted, ensure the IDE is the active window and press Enter
+- The system will automatically send the appropriate key sequence based on the IDE
 - Falls back to manual instructions if automation fails
 
 EXAMPLE USAGE:
-python harness.py --mode manual
-python harness.py --mode auto --ide Cursor
-python harness.py --mode auto
+python harness.py --mode manual --ide continue
+python harness.py --mode auto --ide cursor
+python harness.py --mode auto --ide continue
 """
 
 import json
@@ -39,35 +41,45 @@ from typing import Dict, Any, List
 from utils import parse_multi_part_output
 
 
-def get_platform_keys():
-    """Get the correct key combinations for the current platform."""
+def get_platform_keys(ide_name=None):
+    """Get the correct key combinations for the current platform and IDE."""
     system = platform.system().lower()
+    
+    # Base keys for the platform
     if system == 'darwin':  # macOS
-        return {
+        base_keys = {
             'chat_activate': ['command', 'l'],
             'new_chat': ['command', 'n'],
             'paste': ['command', 'v']
         }
     else:  # Windows/Linux
-        return {
+        base_keys = {
             'chat_activate': ['ctrl', 'l'],
             'new_chat': ['ctrl', 'n'],
             'paste': ['ctrl', 'v']
         }
+    
+    # IDE-specific overrides
+    if ide_name and ide_name.lower() == 'continue':
+        # For Continue, we only use chat_activate (Ctrl+L), no new_chat
+        base_keys['new_chat'] = None
+    
+    return base_keys
 
 
-def automate_cursor_input(prompt_text, is_first_question=True, delay_before=2.0, delay_between=1.0):
-    """Automate the process of pasting prompt into Cursor.
+def automate_ide_input(prompt_text, ide_name, is_first_question=True, delay_before=2.0, delay_between=1.0):
+    """Automate the process of pasting prompt into the specified IDE.
     
     Args:
         prompt_text: The text to paste (should already be in clipboard)
+        ide_name: Name of the IDE being tested (cursor, continue, etc.)
         is_first_question: Whether this is the first question (needs Cmd+L to activate)
         delay_before: Seconds to wait before starting automation
         delay_between: Seconds to wait between key presses
     """
-    keys = get_platform_keys()
+    keys = get_platform_keys(ide_name)
     
-    print("Automating Cursor input...")
+    print(f"Automating {ide_name} input...")
     
     # Countdown
     for i in range(int(delay_before), 0, -1):
@@ -75,21 +87,23 @@ def automate_cursor_input(prompt_text, is_first_question=True, delay_before=2.0,
         time.sleep(1.0)
     
     try:
-        # Try to activate Cursor application first (macOS specific)
+        # Try to activate IDE application first (macOS specific)
         system = platform.system().lower()
         if system == 'darwin':
-            print("Attempting to activate Cursor application...")
-            # Use AppleScript to activate Cursor
+            ide_app_name = "Cursor" if ide_name.lower() == "cursor" else ide_name.title()
+            print(f"Attempting to activate {ide_app_name} application...")
+            # Use AppleScript to activate the IDE
             try:
-                subprocess.run(['osascript', '-e', 'tell application "Cursor" to activate'], 
+                subprocess.run(['osascript', '-e', f'tell application "{ide_app_name}" to activate'], 
                              check=False, capture_output=True)
                 time.sleep(1.0)  # Give time for app to activate
             except Exception as e:
-                print(f"Could not activate Cursor app: {e}")
-                print("Please make sure Cursor is manually focused.")
+                print(f"Could not activate {ide_app_name} app: {e}")
+                print(f"Please make sure {ide_app_name} is manually focused.")
         
-        # Only activate Cursor chat box for the first question
-        if is_first_question:
+        # Activate chat box - for Continue, always activate; for others, only on first question
+        should_activate_chat = is_first_question or (ide_name and ide_name.lower() == 'continue')
+        if should_activate_chat:
             print("   → Activating chat...")
             chat_keys = keys['chat_activate']
             
@@ -106,27 +120,31 @@ def automate_cursor_input(prompt_text, is_first_question=True, delay_before=2.0,
             # Give time for focus to switch
             time.sleep(delay_between)
         
-        # Create new chat
-        print("   → Creating new chat...")
-        new_chat_keys = keys['new_chat']
-        
-        pyautogui.keyDown(new_chat_keys[0])
-        time.sleep(0.1)  # Small delay
-        pyautogui.keyDown(new_chat_keys[1])
-        time.sleep(0.1)  # Small delay
-        pyautogui.keyUp(new_chat_keys[1])
-        time.sleep(0.1)  # Small delay
-        pyautogui.keyUp(new_chat_keys[0])
-        
-        # Give time for confirmation dialog to appear if needed
-        time.sleep(delay_between)
-        
-        # Press Enter to confirm new chat if dialog appears
-        print("   → Confirming new chat...")
-        pyautogui.press('enter')
-        
-        # Give more time for new chat to be created
-        time.sleep(delay_between)
+        # Create new chat (only for IDEs that support it)
+        if keys['new_chat'] is not None:
+            print("   → Creating new chat...")
+            new_chat_keys = keys['new_chat']
+            
+            pyautogui.keyDown(new_chat_keys[0])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyDown(new_chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(new_chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(new_chat_keys[0])
+            
+            # Give time for confirmation dialog to appear if needed
+            time.sleep(delay_between)
+            
+            # Press Enter to confirm new chat if dialog appears
+            print("   → Confirming new chat...")
+            pyautogui.press('enter')
+            
+            # Give more time for new chat to be created
+            time.sleep(delay_between)
+        else:
+            print("   → Skipping new chat creation (not supported by this IDE)")
+            time.sleep(delay_between)
         
         # Paste the prompt
         print("   → Pasting prompt...")
@@ -208,7 +226,8 @@ class SolutionFileHandler(FileSystemEventHandler):
                 lines = f.readlines()
             
             for i, line in enumerate(lines):
-                if marker_line in line:
+                # Strip whitespace for comparison to handle leading/trailing spaces
+                if marker_line in line.strip():
                     remaining_lines = lines[i+1:]
                     content_lines = [line.strip() for line in remaining_lines if line.strip()]
                     return len(content_lines) > 0
@@ -253,6 +272,11 @@ class IDETestHarness:
         self.benchmark_data = benchmark_data
         self.mode = mode
         self.first_question = True  # Track if this is the first question
+        
+    def is_auto_mode_supported(self, ide_name: str) -> bool:
+        """Check if auto mode is supported for the given IDE."""
+        supported_ides = ['cursor', 'continue']
+        return ide_name.lower() in supported_ides
 
     def calculate_question_score(self, test_case: Dict[str, Any], passed_result) -> tuple:
         """
@@ -383,9 +407,12 @@ class IDETestHarness:
             "2. The file I just specified already contains data. Your code should directly use that data.")
         # TODO only mention data if the problem has data to be included directly in the code.
         prompt.append("Do not modify the existing data.")
-        prompt.append("3. The code provides path(s) to necessary data files. Import those csv files using pandas or any other method you prefer. You may need to investigate the file structure.")
-        prompt.append(
-            "4. The code should output the answer to the question in stdout. ")
+        prompt.append("3. The code provides path(s) to necessary data files. Import those csv files using pandas or any other method you prefer. ")
+        prompt.append("4. If there are data files, you need to read them to understand the structure/content. Your code must run and pass the test on first attempt.")
+        prompt.append("5. Again, your code must run and pass the test on first attempt. Think through your response before editing the answer.py file and only edit the file once your are sure about your answer.")
+        prompt.append("6. The code should output the answer to the question in stdout. ")
+        prompt.append("7. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
+        prompt.append("8. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
 
         prompt.append("The answer should be in the following format:")
         if question_type == "multi_part":
@@ -396,7 +423,7 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("5. Do NOT run the script. I will do it on my own.\n")
+        prompt.append("9. Do NOT run the script. I will do it on my own.\n")
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
@@ -414,16 +441,21 @@ class IDETestHarness:
         print(f"1. Open the folder above in '{ide_name}'.")
         
         if self.mode == 'auto':
-            print("2. Ensure Cursor is the active window (click on it).")
+            print(f"2. Ensure {ide_name} is the active window (click on it).")
             print("3. The system will automatically:")
-            print("   - Activate Cursor chat (Cmd+L)")
-            print("   - Create a new chat (Cmd+N)")
-            print("   - Paste the prompt (Cmd+V)")
-            print("   - Submit the prompt (Enter)")
-            print(f"4. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder when Cursor generates it.")
+            if ide_name.lower() == 'continue':
+                print("   - Activate chat (Cmd+L or Ctrl+L)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
+            else:  # cursor or other supported IDEs
+                print("   - Activate chat (Cmd+L or Ctrl+L)")
+                print("   - Create a new chat (Cmd+N or Ctrl+N)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
+            print(f"4. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder when {ide_name} generates it.")
             
             # Attempt automation (no user prompt needed - already confirmed at start)
-            automation_success = automate_cursor_input(prompt, is_first_question=self.first_question)
+            automation_success = automate_ide_input(prompt, ide_name, is_first_question=self.first_question)
             
             # After first question, set flag to False
             if self.first_question:
@@ -432,14 +464,20 @@ class IDETestHarness:
             if not automation_success:
                 print("\nFalling back to manual mode...")
                 print("Please manually:")
-                print("- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate Cursor chat")
-                print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                if ide_name.lower() == 'continue':
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+                else:
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                    print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
                 print("- Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
                 print("- Press Enter to submit")
         else:
             print("2. Generate the solution using the prompt from your clipboard:")
-            print("   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate Cursor chat")
-            print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+            if ide_name.lower() == 'continue':
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+            else:
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
             print("   - Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
             print("   - Press Enter to submit")
             print(f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
@@ -583,15 +621,22 @@ class IDETestHarness:
 
     def run_all_tests(self, ide_name: str):
         """Runs all tests for a given IDE."""
+        # Check if auto mode is supported for this IDE
+        if self.mode == 'auto' and not self.is_auto_mode_supported(ide_name):
+            print(f"\n ERROR: Auto mode is not supported for '{ide_name}'.")
+            print("Auto mode is only available for: cursor, continue")
+            print("Please use manual mode or switch to a supported IDE.")
+            return
+        
         # One-time setup for auto mode
         if self.mode == 'auto':
             print("\n=== AUTO MODE SETUP ===")
-            print("Please prepare Cursor for automation:")
-            print("1. Make sure Cursor is open and visible")
-            print("2. Click on Cursor to ensure it's the active window")
+            print(f"Please prepare {ide_name} for automation:")
+            print(f"1. Make sure {ide_name} is open and visible")
+            print(f"2. Click on {ide_name} to ensure it's the active window")
             print("3. The automation will handle all questions automatically")
             print("\nOnce you press Enter, the automation will run for ALL test cases.")
-            input("Press Enter when Cursor is ready and you're prepared for full automation...")
+            input(f"Press Enter when {ide_name} is ready and you're prepared for full automation...")
             print("\n🤖 Starting automated test run...\n")
         
         all_results = {}
@@ -655,7 +700,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', choices=['auto', 'manual'], default='manual',
                         help='Mode of operation: auto (automated Cursor input) or manual (default)')
     parser.add_argument('--ide', type=str, 
-                        help='Name of the AI IDE to test (e.g., Cursor, copilot, etc.)')
+                        help='Name of the AI tool to test (e.g., cursor, continue, copilot, etc.)')
     
     args = parser.parse_args()
     
@@ -665,7 +710,8 @@ if __name__ == '__main__':
 
     print(f"Running in {args.mode.upper()} mode")
     if args.mode == 'auto':
-        print("Automation will handle Cursor input automatically.")
+        print("Automation will handle IDE input automatically.")
+        print("Note: Auto mode is only supported for Cursor and Continue.")
         # Set pyautogui safety settings
         pyautogui.FAILSAFE = True  # Move mouse to corner to abort
         pyautogui.PAUSE = 0.5  # Default pause between actions
@@ -675,6 +721,6 @@ if __name__ == '__main__':
     # You would run this script once for each IDE you want to test.
     # For example, first for "Cursor", then re-run for "VSCode_Copilot".
     ide_to_test = args.ide or input(
-        "Enter the name of the AI you are testing (e.g., Cursor, copilot, etc.): ")
+        "Enter the name of the AI you are testing (e.g., cursor, continue, copilot, etc.): ")
     if ide_to_test:
         harness.run_all_tests(ide_to_test)
