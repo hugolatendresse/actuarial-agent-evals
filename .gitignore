@@ -1,2 +1,5 @@
 ide_results/
 **__pycache__/
+.cursor/
+.env
+venv/
