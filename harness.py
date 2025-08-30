@@ -7,10 +7,11 @@ MANUAL MODE (default):
 - Every time it stops and waits, click into the IDE, activate chat, and paste the prompt
 - For Cursor: Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start chat, then Cmd+N/Ctrl+N for new chat
 - For Continue: Only Cmd+L (Mac) or Ctrl+L (Windows/Linux) to start chat (no new chat needed)
+- For Cline: Cmd+' (Mac) or Ctrl+' (Windows/Linux) to start chat, then Cmd+N/Ctrl+N for new chat
 
 AUTO MODE (automated):
 - run harness with `python harness.py --mode auto`
-- Only supported for Cursor and Continue IDEs
+- Only supported for Cursor, Continue, and Cline IDEs
 - Enter the AI name when prompted (or use --ide flag)  
 - When prompted, ensure the IDE is the active window and press Enter
 - The system will automatically send the appropriate key sequence based on the IDE
@@ -20,6 +21,7 @@ EXAMPLE USAGE:
 python harness.py --mode manual --ide continue
 python harness.py --mode auto --ide cursor
 python harness.py --mode auto --ide continue
+python harness.py --mode auto --ide cline
 """
 
 import json
@@ -63,6 +65,12 @@ def get_platform_keys(ide_name=None):
     if ide_name and ide_name.lower() == 'continue':
         # For Continue, we only use chat_activate (Ctrl+L), no new_chat
         base_keys['new_chat'] = None
+    elif ide_name and ide_name.lower() == 'cline':
+        # For Cline, use Cmd+' (or Ctrl+') to activate chat, Cmd+N for new chat (add as custom shortcut)
+        if system == 'darwin':  # macOS
+            base_keys['chat_activate'] = ['command', '\'']
+        else: 
+            base_keys['chat_activate'] = ['ctrl', '\'']
     
     return base_keys
 
@@ -218,20 +226,30 @@ class SolutionFileHandler(FileSystemEventHandler):
         self.file_ready = False
 
     def _has_content_below_marker(self, file_path):
-        """Check if there's meaningful content below the marker line."""
+        """Check if there's meaningful content below the marker line and if solution is complete."""
         marker_line = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
+        completion_marker = "## SOLUTION COMPLETE"
         
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
+                content = f.read()
             
-            for i, line in enumerate(lines):
-                # Strip whitespace for comparison to handle leading/trailing spaces
-                if marker_line in line.strip():
-                    remaining_lines = lines[i+1:]
-                    content_lines = [line.strip() for line in remaining_lines if line.strip()]
-                    return len(content_lines) > 0
-            return False
+            # Find the start marker
+            marker_index = content.find(marker_line)
+            if marker_index == -1:
+                return False
+            
+            # Get content after the marker
+            content_after_marker = content[marker_index + len(marker_line):]
+            
+            # Check if there's meaningful content
+            content_lines = [line.strip() for line in content_after_marker.split('\n') if line.strip()]
+            has_content = len(content_lines) > 0
+            
+            # Check for completion marker
+            has_completion_marker = completion_marker in content_after_marker
+            
+            return has_content and has_completion_marker
             
         except (IOError, UnicodeDecodeError):
             return False
@@ -242,12 +260,12 @@ class SolutionFileHandler(FileSystemEventHandler):
             print(f"\nDetected '{self.filename_to_watch}' created.")
             self.file_path = event.src_path
             
-            # Check if there's actual content below the marker
+            # Check if there's actual content below the marker and completion marker
             if self._has_content_below_marker(event.src_path):
-                print("Content found below marker. File is ready.")
+                print("Content and '## SOLUTION COMPLETE' marker found. File is ready.")
                 self.file_ready = True
             else:
-                print("No content below marker yet. Waiting for content...")
+                print("Waiting for content and '## SOLUTION COMPLETE' marker...")
 
     def on_modified(self, event):
         """Called when a file is modified (e.g., saved again)."""
@@ -255,12 +273,12 @@ class SolutionFileHandler(FileSystemEventHandler):
             print(f"Detected '{self.filename_to_watch}' has been saved.")
             self.file_path = event.src_path
             
-            # Check if there's actual content below the marker
+            # Check if there's actual content below the marker and completion marker
             if self._has_content_below_marker(event.src_path):
-                print("Content found below marker. File is ready.")
+                print("Content and '## SOLUTION COMPLETE' marker found. File is ready.")
                 self.file_ready = True
             else:
-                print("No content below marker yet. Waiting for content...")
+                print("Waiting for content and '## SOLUTION COMPLETE' marker...")
 
 
 # --- Test Harness Engine ---
@@ -275,7 +293,7 @@ class IDETestHarness:
         
     def is_auto_mode_supported(self, ide_name: str) -> bool:
         """Check if auto mode is supported for the given IDE."""
-        supported_ides = ['cursor', 'continue']
+        supported_ides = ['cursor', 'continue', 'cline']
         return ide_name.lower() in supported_ides
 
     def calculate_question_score(self, test_case: Dict[str, Any], passed_result) -> tuple:
@@ -423,7 +441,8 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("9. Do NOT run the script. I will do it on my own.\n")
+        prompt.append("9. Do NOT run the script. I will do it on my own.")
+        prompt.append("10. IMPORTANT: Once you have completed your solution and are confident it is correct, add the marker '## SOLUTION COMPLETE' as a comment at the end of your code. Only add this marker when you are completely finished with your solution and do not need to make any more modifications.\n")
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
@@ -447,6 +466,11 @@ class IDETestHarness:
                 print("   - Activate chat (Cmd+L or Ctrl+L)")
                 print("   - Paste the prompt (Cmd+V or Ctrl+V)")
                 print("   - Submit the prompt (Enter)")
+            elif ide_name.lower() == 'cline':
+                print("   - Activate chat (Cmd+' or Ctrl+')")
+                print("   - Create a new chat (Cmd+N or Ctrl+N)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
             else:  # cursor or other supported IDEs
                 print("   - Activate chat (Cmd+L or Ctrl+L)")
                 print("   - Create a new chat (Cmd+N or Ctrl+N)")
@@ -466,6 +490,9 @@ class IDETestHarness:
                 print("Please manually:")
                 if ide_name.lower() == 'continue':
                     print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+                elif ide_name.lower() == 'cline':
+                    print(f"- Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
+                    print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
                 else:
                     print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
                     print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
@@ -475,6 +502,9 @@ class IDETestHarness:
             print("2. Generate the solution using the prompt from your clipboard:")
             if ide_name.lower() == 'continue':
                 print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat (needed for each question)")
+            elif ide_name.lower() == 'cline':
+                print(f"   - Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
+                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
             else:
                 print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
                 print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
@@ -482,7 +512,7 @@ class IDETestHarness:
             print("   - Press Enter to submit")
             print(f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
         
-        print(f"\n< Waiting for {ANSWER_FILENAME} to be saved... >")
+        print(f"\n< Waiting for {ANSWER_FILENAME} to be saved with '## SOLUTION COMPLETE' marker... >")
 
         # Set up the file watcher
         event_handler = SolutionFileHandler(ANSWER_FILENAME, workspace_dir)
@@ -624,7 +654,7 @@ class IDETestHarness:
         # Check if auto mode is supported for this IDE
         if self.mode == 'auto' and not self.is_auto_mode_supported(ide_name):
             print(f"\n ERROR: Auto mode is not supported for '{ide_name}'.")
-            print("Auto mode is only available for: cursor, continue")
+            print("Auto mode is only available for: cursor, continue, cline")
             print("Please use manual mode or switch to a supported IDE.")
             return
         
@@ -711,7 +741,7 @@ if __name__ == '__main__':
     print(f"Running in {args.mode.upper()} mode")
     if args.mode == 'auto':
         print("Automation will handle IDE input automatically.")
-        print("Note: Auto mode is only supported for Cursor and Continue.")
+        print("Note: Auto mode is only supported for Cursor, Continue, and Cline.")
         # Set pyautogui safety settings
         pyautogui.FAILSAFE = True  # Move mouse to corner to abort
         pyautogui.PAUSE = 0.5  # Default pause between actions
