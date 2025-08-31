@@ -5,16 +5,11 @@ pip install uv
 uv init rag
 cd rag
 
-
-
-
 uv add 'mcp[cli]' langchain langchain-community langchain-ollama chromadb sentence-transformers sqlite-vss  langchain-core langchain-text-splitters langgraph 
-
 
 ollama pull nomic-embed-text:latest
 
 ollama pull qwen2.5
-
 
 
 To get the path of cline_mcp_settings, can launch Aria with F5, click on MCP settings, etc.  
