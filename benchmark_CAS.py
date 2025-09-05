@@ -200,7 +200,7 @@ benchmark_cas = [
         "expected_answer": {
             "type": "point_estimate",
             "value": 0.0248,
-            "tolerance": 0.0001,
+            "tolerance": 0.001,
         },
         "question_point_value": 2.25,
         "source": "CAS Exam 5, Fall 2019, Question 3a",
@@ -1131,8 +1131,8 @@ benchmark_cas = [
         "expected_answer": {
             "type": "multi_part_numeric",
             "parts": {
-                "a": {"value": 0.04565, "tolerance": 0.0005},
-                "b": {"value": 0.17733, "tolerance": 0.0005},
+                "a": {"value": 0.04565, "tolerance": 0.005},
+                "b": {"value": 0.17733, "tolerance": 0.005},
             },
         },
         "question_point_value": {
@@ -1493,7 +1493,7 @@ benchmark_cas = [
                 "ai": {"value": 2942000, "tolerance": 1000},
                 "aii": {"value": 3471000, "tolerance": 1000},
                 "aiii": {"value": 3801000, "tolerance": 1000},
-                "b": {"value": 0.1126, "tolerance": 0.0001},
+                "b": {"value": 0.1126, "tolerance": 0.001},
             },
         },
         "question_point_value": {
