@@ -36,6 +36,8 @@ import pandas as pd
 import numpy as np
 import pyperclip
 import pyautogui
+import signal
+import sys
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import Dict, Any, List
@@ -284,13 +286,82 @@ class SolutionFileHandler(FileSystemEventHandler):
 # --- Test Harness Engine ---
 
 class IDETestHarness:
-    def __init__(self, benchmark_data, mode='manual'):
+    def __init__(self, benchmark_data, mode='manual', state_file=None):
         if not os.path.exists(RESULTS_DIR):
             os.makedirs(RESULTS_DIR)
         self.benchmark_data = benchmark_data
         self.mode = mode
         self.first_question = True  # Track if this is the first question
+        self.state_file = state_file or os.path.join(RESULTS_DIR, "harness_state.json")
+        self.completed_tests = {}
+        self.total_points_earned = 0
+        self.total_points_possible = 0
+        self.current_question = None
+        self.ide_name = None
         
+        # Set up signal handler for graceful interruption
+        signal.signal(signal.SIGINT, self._signal_handler)
+        
+    def _signal_handler(self, signum, frame):
+        """Handle Ctrl+C by saving state and exiting."""
+        print("\nInterruption detected. Saving progress...")
+        self.save_state()
+        print(f"Progress saved. Score: {self.total_points_earned:.2f}/{self.total_points_possible:.2f}")
+        print(f"To resume: python harness.py --mode {self.mode} --ide {self.ide_name} --resume")
+        sys.exit(0)
+    
+    def save_state(self):
+        """Save current test progress to state file."""
+        state = {
+            "completed_tests": self.completed_tests,
+            "total_points_earned": self.total_points_earned,
+            "total_points_possible": self.total_points_possible,
+            "first_question": self.first_question,
+            "current_question": self.current_question,
+            "ide_name": self.ide_name,
+            "mode": self.mode,
+            "timestamp": time.time()
+        }
+        with open(self.state_file, 'w') as f:
+            json.dump(state, f, indent=4)
+    
+    def load_state(self):
+        """Load previous test progress from state file."""
+        if os.path.exists(self.state_file):
+            try:
+                with open(self.state_file, 'r') as f:
+                    state = json.load(f)
+                    self.completed_tests = state.get("completed_tests", {})
+                    self.total_points_earned = state.get("total_points_earned", 0)
+                    self.total_points_possible = state.get("total_points_possible", 0)
+                    self.first_question = state.get("first_question", True)
+                    self.current_question = state.get("current_question")
+                    
+                    print(f"Loaded previous session: {len(self.completed_tests)}/{len(self.benchmark_data)} questions completed")
+                    print(f"Current score: {self.total_points_earned:.2f}/{self.total_points_possible:.2f}")
+                    return True
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error loading state file: {e}")
+        return False
+    
+    def clear_state(self):
+        """Clear saved state file."""
+        if os.path.exists(self.state_file):
+            os.remove(self.state_file)
+    
+    def get_remaining_tests(self, start_from=None):
+        """Get list of tests to run, optionally starting from specific question."""
+        if start_from:
+            start_idx = next((i for i, test in enumerate(self.benchmark_data) 
+                            if test.get('question_id') == start_from), None)
+            if start_idx is None:
+                print(f"Question '{start_from}' not found in benchmark")
+                return []
+            return self.benchmark_data[start_idx:]
+        
+        return [test for test in self.benchmark_data 
+                if test.get('question_id') not in self.completed_tests]
+    
     def is_auto_mode_supported(self, ide_name: str) -> bool:
         """Check if auto mode is supported for the given IDE."""
         supported_ides = ['cursor', 'continue', 'cline']
@@ -429,8 +500,9 @@ class IDETestHarness:
         prompt.append("4. If there are data files, you need to read them to understand the structure/content. Your code must run and pass the test on first attempt.")
         prompt.append("5. Again, your code must run and pass the test on first attempt. Think through your response before editing the answer.py file and only edit the file once your are sure about your answer.")
         prompt.append("6. The code should output the answer to the question in stdout. ")
-        prompt.append("7. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
-        prompt.append("8. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
+        prompt.append("7. IMPORTANT: Do NOT round your calculations or intermediate results. Use full precision in your calculations. Only the final display format should round to 3 decimal places.")
+        prompt.append("8. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
+        prompt.append("9. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
 
         prompt.append("The answer should be in the following format:")
         if question_type == "multi_part":
@@ -441,8 +513,8 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("9. Do NOT run the script. I will do it on my own.")
-        prompt.append("10. IMPORTANT: Once you have completed your solution and are confident it is correct, add the marker '## SOLUTION COMPLETE' as a comment at the end of your code. Only add this marker when you are completely finished with your solution and do not need to make any more modifications.\n")
+        prompt.append("10. Do NOT run the script. I will do it on my own.")
+        prompt.append("11. IMPORTANT: Once you have completed your solution and are confident it is correct, add the marker '## SOLUTION COMPLETE' as a comment at the end of your code. Only add this marker when you are completely finished with your solution and do not need to make any more modifications.\n")
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
@@ -649,51 +721,90 @@ class IDETestHarness:
             "execution_error": execution_error,
         }
 
-    def run_all_tests(self, ide_name: str):
-        """Runs all tests for a given IDE."""
+    def run_all_tests(self, ide_name: str, start_from=None, resume=False):
+        """Runs all tests for a given IDE with resume support."""
+        self.ide_name = ide_name
+        
+        # Handle resume mode
+        if resume:
+            if self.load_state():
+                remaining = self.get_remaining_tests()
+                if not remaining:
+                    print("All tests already completed!")
+                    self.show_final_summary(ide_name, partial=False)
+                    return
+                # When resuming, treat as first question for automation purposes
+                self.first_question = True
+            else:
+                print("No previous state found, starting fresh")
+                resume = False
+        
+        if not resume:
+            self.clear_state()
+        
         # Check if auto mode is supported for this IDE
         if self.mode == 'auto' and not self.is_auto_mode_supported(ide_name):
-            print(f"\n ERROR: Auto mode is not supported for '{ide_name}'.")
+            print(f"ERROR: Auto mode is not supported for '{ide_name}'.")
             print("Auto mode is only available for: cursor, continue, cline")
-            print("Please use manual mode or switch to a supported IDE.")
             return
         
         # One-time setup for auto mode
-        if self.mode == 'auto':
-            print("\n=== AUTO MODE SETUP ===")
-            print(f"Please prepare {ide_name} for automation:")
+        if self.mode == 'auto' and self.first_question:
+            print(f"Prepare {ide_name} for automation:")
             print(f"1. Make sure {ide_name} is open and visible")
             print(f"2. Click on {ide_name} to ensure it's the active window")
-            print("3. The automation will handle all questions automatically")
-            print("\nOnce you press Enter, the automation will run for ALL test cases.")
-            input(f"Press Enter when {ide_name} is ready and you're prepared for full automation...")
-            print("\n🤖 Starting automated test run...\n")
+            print("Press Ctrl+C anytime to stop and save progress")
+            input(f"Press Enter when {ide_name} is ready...")
+            print("Starting automated test run...")
         
-        all_results = {}
-        total_points_earned = 0
-        total_points_possible = 0
+        # Get tests to run
+        tests_to_run = self.get_remaining_tests(start_from)
+        if not tests_to_run:
+            print("No tests to run!")
+            return
         
-        for i, test_case in enumerate(self.benchmark_data):
-            question_id = test_case.get('question_id')
-            print(
-                f"\n--- Running Test {i+1}/{len(self.benchmark_data)}: {question_id} for {ide_name} ---")
-            result = self.run_test_case(test_case, ide_name)
-            all_results[question_id] = result
-            # status = "PASSED" if result["passed"] else "FAILED" # TODO determine what to conclude for multipart questions
-            # print(f"--- Result: {status} ---")
-            
-            # Add to running totals
-            total_points_earned += result["points_earned"]
-            total_points_possible += result["total_possible_points"]
-
-            print(f"Question Score: {result['points_earned']:.2f}/{result['total_possible_points']:.2f}")
-
-        # Print final summary
-        print("\n" + "="*50)
-        print("FINAL SCORE SUMMARY")
+        print(f"Running {len(tests_to_run)} tests. Press Ctrl+C to interrupt.")
+        
+        try:
+            for test_case in tests_to_run:
+                question_id = test_case.get('question_id')
+                self.current_question = question_id
+                
+                print(f"\nRunning: {question_id} ({len(self.completed_tests) + 1}/{len(self.benchmark_data)})")
+                
+                result = self.run_test_case(test_case, ide_name)
+                
+                # Store result and update totals
+                self.completed_tests[question_id] = result
+                self.total_points_earned += result["points_earned"]
+                self.total_points_possible += result["total_possible_points"]
+                
+                print(f"Score: {result['points_earned']:.2f}/{result['total_possible_points']:.2f}")
+                
+                # Save progress after each question
+                self.save_state()
+                
+                if self.first_question:
+                    self.first_question = False
+                
+                self.current_question = None
+                
+        except KeyboardInterrupt:
+            print("\nInterrupted by user")
+            return
+        
+        # All tests completed
+        print("All tests completed!")
+        self.show_final_summary(ide_name, partial=False)
+        self.clear_state()
+    
+    def show_final_summary(self, ide_name: str, partial: bool = False):
+        """Show final score summary."""
+        status = "PARTIAL RESULTS" if partial else "FINAL RESULTS"
+        print(f"\n{status}")
         print("="*50)
-        for key, result in all_results.items():
-            print(f"Test ID: {key}, Results: {result['passed']}")
+        
+        for key, result in self.completed_tests.items():
             status_str = ""
             if isinstance(result['passed'], dict):
                 passed_parts = sum(1 for v in result['passed'].values() if v)
@@ -706,51 +817,63 @@ class IDETestHarness:
             
             print(f"{key}: {result['points_earned']:.2f}/{result['total_possible_points']:.2f} {status_str}")
         
-        percentage = (total_points_earned / total_points_possible * 100) if total_points_possible > 0 else 0
+        percentage = (self.total_points_earned / self.total_points_possible * 100) if self.total_points_possible > 0 else 0
         print("="*50)
-        print(f"TOTAL SCORE: {total_points_earned:.2f}/{total_points_possible:.2f} ({percentage:.1f}%)")
+        print(f"TOTAL: {self.total_points_earned:.2f}/{self.total_points_possible:.2f} ({percentage:.1f}%)")
+        
+        if partial:
+            remaining = len(self.benchmark_data) - len(self.completed_tests)
+            print(f"Remaining: {remaining}")
+        
         print("="*50)
         
+        # Save results
+        suffix = "_partial" if partial else ""
+        results_path = os.path.join(RESULTS_DIR, f"summary_{ide_name}{suffix}.json")
         summary_data = {
             "ide_name": ide_name,
-            "total_points_earned": total_points_earned,
-            "total_points_possible": total_points_possible,
+            "total_points_earned": self.total_points_earned,
+            "total_points_possible": self.total_points_possible,
             "percentage_score": percentage,
-            "individual_results": all_results
+            "completed_tests": len(self.completed_tests),
+            "total_tests": len(self.benchmark_data),
+            "individual_results": self.completed_tests,
+            "is_partial": partial,
+            "timestamp": time.time()
         }
         
-        results_path = os.path.join(RESULTS_DIR, f"summary_{ide_name}.json")
         with open(results_path, 'w') as f:
             json.dump(summary_data, f, indent=4)
-        print(f"\nCompleted all tests for {ide_name}. Results saved to {results_path}")
+        print(f"Results saved to {results_path}")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AI IDE Test Harness')
     parser.add_argument('--mode', choices=['auto', 'manual'], default='manual',
-                        help='Mode of operation: auto (automated Cursor input) or manual (default)')
+                        help='Mode of operation: auto (automated) or manual (default)')
     parser.add_argument('--ide', type=str, 
-                        help='Name of the AI tool to test (e.g., cursor, continue, copilot, etc.)')
+                        help='Name of the AI tool to test')
+    parser.add_argument('--resume', action='store_true',
+                        help='Resume from previous session')
+    parser.add_argument('--start-from', type=str,
+                        help='Start from specific question ID')
+    parser.add_argument('--state-file', type=str,
+                        help='Path to state file (default: ide_results/harness_state.json)')
     
     args = parser.parse_args()
     
-    # from benchmark import benchmark as benchmark_data
     from benchmark_CAS import benchmark_cas as benchmark_data
-    harness = IDETestHarness(benchmark_data=benchmark_data, mode=args.mode)
+    harness = IDETestHarness(benchmark_data=benchmark_data, mode=args.mode, 
+                           state_file=args.state_file)
 
     print(f"Running in {args.mode.upper()} mode")
     if args.mode == 'auto':
-        print("Automation will handle IDE input automatically.")
-        print("Note: Auto mode is only supported for Cursor, Continue, and Cline.")
-        # Set pyautogui safety settings
-        pyautogui.FAILSAFE = True  # Move mouse to corner to abort
-        pyautogui.PAUSE = 0.5  # Default pause between actions
+        print("Press Ctrl+C anytime to stop and save progress.")
+        pyautogui.FAILSAFE = True
+        pyautogui.PAUSE = 0.5
     else:
-        print("Manual mode: you will need to paste prompts manually.")
+        print("Press Ctrl+C anytime to stop and save progress.")
 
-    # You would run this script once for each IDE you want to test.
-    # For example, first for "Cursor", then re-run for "VSCode_Copilot".
-    ide_to_test = args.ide or input(
-        "Enter the name of the AI you are testing (e.g., cursor, continue, copilot, etc.): ")
+    ide_to_test = args.ide or input("Enter the name of the AI you are testing: ")
     if ide_to_test:
-        harness.run_all_tests(ide_to_test)
+        harness.run_all_tests(ide_to_test, start_from=args.start_from, resume=args.resume)
