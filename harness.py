@@ -22,6 +22,8 @@ python harness.py --mode manual --ide continue
 python harness.py --mode auto --ide cursor
 python harness.py --mode auto --ide continue
 python harness.py --mode auto --ide cline
+python harness.py --mode manual --ide cursor --question-id EX5-F19-Q01
+python harness.py --mode auto --ide cursor --start-from EX5-F19-Q05
 """
 
 import json
@@ -349,8 +351,17 @@ class IDETestHarness:
         if os.path.exists(self.state_file):
             os.remove(self.state_file)
     
-    def get_remaining_tests(self, start_from=None):
-        """Get list of tests to run, optionally starting from specific question."""
+    def get_remaining_tests(self, start_from=None, question_id=None):
+        """Get list of tests to run, optionally starting from specific question or running single question."""
+        if question_id:
+            # Return only the specific question
+            matching_test = next((test for test in self.benchmark_data 
+                                if test.get('question_id') == question_id), None)
+            if matching_test is None:
+                print(f"Question '{question_id}' not found in benchmark")
+                return []
+            return [matching_test]
+        
         if start_from:
             start_idx = next((i for i, test in enumerate(self.benchmark_data) 
                             if test.get('question_id') == start_from), None)
@@ -721,9 +732,18 @@ class IDETestHarness:
             "execution_error": execution_error,
         }
 
-    def run_all_tests(self, ide_name: str, start_from=None, resume=False):
+    def run_all_tests(self, ide_name: str, start_from=None, question_id=None, resume=False):
         """Runs all tests for a given IDE with resume support."""
         self.ide_name = ide_name
+        
+        # Validate mutually exclusive options
+        if question_id and start_from:
+            print("ERROR: Cannot use both --question-id and --start-from options together")
+            return
+        
+        if question_id and resume:
+            print("ERROR: Cannot use --question-id with --resume option")
+            return
         
         # Handle resume mode
         if resume:
@@ -758,24 +778,33 @@ class IDETestHarness:
             print("Starting automated test run...")
         
         # Get tests to run
-        tests_to_run = self.get_remaining_tests(start_from)
+        tests_to_run = self.get_remaining_tests(start_from, question_id)
         if not tests_to_run:
-            print("No tests to run!")
+            if question_id:
+                print(f"Question '{question_id}' not found!")
+            else:
+                print("No tests to run!")
             return
         
-        print(f"Running {len(tests_to_run)} tests. Press Ctrl+C to interrupt.")
+        if question_id:
+            print(f"Running single question: {question_id}")
+        else:
+            print(f"Running {len(tests_to_run)} tests. Press Ctrl+C to interrupt.")
         
         try:
             for test_case in tests_to_run:
-                question_id = test_case.get('question_id')
-                self.current_question = question_id
+                current_question_id = test_case.get('question_id')
+                self.current_question = current_question_id
                 
-                print(f"\nRunning: {question_id} ({len(self.completed_tests) + 1}/{len(self.benchmark_data)})")
+                if question_id:
+                    print(f"\nRunning: {current_question_id}")
+                else:
+                    print(f"\nRunning: {current_question_id} ({len(self.completed_tests) + 1}/{len(self.benchmark_data)})")
                 
                 result = self.run_test_case(test_case, ide_name)
                 
                 # Store result and update totals
-                self.completed_tests[question_id] = result
+                self.completed_tests[current_question_id] = result
                 self.total_points_earned += result["points_earned"]
                 self.total_points_possible += result["total_possible_points"]
                 
@@ -794,9 +823,13 @@ class IDETestHarness:
             return
         
         # All tests completed
-        print("All tests completed!")
+        if question_id:
+            print("Question completed!")
+        else:
+            print("All tests completed!")
         self.show_final_summary(ide_name, partial=False)
-        self.clear_state()
+        if not question_id:
+            self.clear_state()
     
     def show_final_summary(self, ide_name: str, partial: bool = False):
         """Show final score summary."""
@@ -857,6 +890,8 @@ if __name__ == '__main__':
                         help='Resume from previous session')
     parser.add_argument('--start-from', type=str,
                         help='Start from specific question ID')
+    parser.add_argument('--question-id', type=str,
+                        help='Run only a specific question ID')
     parser.add_argument('--state-file', type=str,
                         help='Path to state file (default: ide_results/harness_state.json)')
     
@@ -874,6 +909,15 @@ if __name__ == '__main__':
     else:
         print("Press Ctrl+C anytime to stop and save progress.")
 
+    # Validate mutually exclusive options
+    if args.question_id and args.start_from:
+        print("ERROR: Cannot use both --question-id and --start-from options together")
+        sys.exit(1)
+    
+    if args.question_id and args.resume:
+        print("ERROR: Cannot use --question-id with --resume option")
+        sys.exit(1)
+    
     ide_to_test = args.ide or input("Enter the name of the AI you are testing: ")
     if ide_to_test:
-        harness.run_all_tests(ide_to_test, start_from=args.start_from, resume=args.resume)
+        harness.run_all_tests(ide_to_test, start_from=args.start_from, question_id=args.question_id, resume=args.resume)
