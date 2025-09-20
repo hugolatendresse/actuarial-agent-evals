@@ -4,3 +4,4 @@ ide_results/
 .env
 venv/
 .aider*
+.cline-debug/

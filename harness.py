@@ -232,7 +232,7 @@ class SolutionFileHandler(FileSystemEventHandler):
     def _has_content_below_marker(self, file_path):
         """Check if there's meaningful content below the marker line and if solution is complete."""
         marker_line = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
-        completion_marker = "## SOLUTION COMPLETE"
+        completion_marker = "## SOLUTION COMPLETE - TESTED AND WORKING"
         
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -266,10 +266,10 @@ class SolutionFileHandler(FileSystemEventHandler):
             
             # Check if there's actual content below the marker and completion marker
             if self._has_content_below_marker(event.src_path):
-                print("Content and '## SOLUTION COMPLETE' marker found. File is ready.")
+                print("Content and '## SOLUTION COMPLETE - TESTED AND WORKING' marker found. File is ready.")
                 self.file_ready = True
             else:
-                print("Waiting for content and '## SOLUTION COMPLETE' marker...")
+                print("Waiting for content and '## SOLUTION COMPLETE - TESTED AND WORKING' marker...")
 
     def on_modified(self, event):
         """Called when a file is modified (e.g., saved again)."""
@@ -279,10 +279,10 @@ class SolutionFileHandler(FileSystemEventHandler):
             
             # Check if there's actual content below the marker and completion marker
             if self._has_content_below_marker(event.src_path):
-                print("Content and '## SOLUTION COMPLETE' marker found. File is ready.")
+                print("Content and '## SOLUTION COMPLETE - TESTED AND WORKING' marker found. File is ready.")
                 self.file_ready = True
             else:
-                print("Waiting for content and '## SOLUTION COMPLETE' marker...")
+                print("Waiting for content and '## SOLUTION COMPLETE - TESTED AND WORKING' marker...")
 
 
 # --- Test Harness Engine ---
@@ -508,12 +508,12 @@ class IDETestHarness:
         # TODO only mention data if the problem has data to be included directly in the code.
         prompt.append("Do not modify the existing data.")
         prompt.append("3. The code provides path(s) to necessary data files. Import those csv files using pandas or any other method you prefer. ")
-        prompt.append("4. If there are data files, you need to read them to understand the structure/content. Your code must run and pass the test on first attempt.")
-        prompt.append("5. Again, your code must run and pass the test on first attempt. Think through your response before editing the answer.py file and only edit the file once your are sure about your answer.")
-        prompt.append("6. The code should output the answer to the question in stdout. ")
-        prompt.append("7. IMPORTANT: Do NOT round your calculations or intermediate results. Use full precision in your calculations. Only the final display format should round to 3 decimal places.")
-        prompt.append("8. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
-        prompt.append("9. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
+        prompt.append("4. If there are data files, you need to read them to understand the structure/content.")
+        prompt.append("5. ITERATIVE DEVELOPMENT: You may run and test your code multiple times to debug and refine your solution.")
+        prompt.append("6. You should go ahead and modify the answer.py file rather than just showing or proposing the code.")
+        prompt.append("7. The code should be inserted BELOW the marker: '### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###' ")
+        prompt.append("8. The code should output the answer to the question in stdout. ")
+        prompt.append("9. IMPORTANT: Do NOT round your calculations or intermediate results. Use full precision in your calculations. Only the final display format should round to 3 decimal places.")
 
         prompt.append("The answer should be in the following format:")
         if question_type == "multi_part":
@@ -524,8 +524,27 @@ class IDETestHarness:
         else:
             raise ValueError(f"Unsupported question type: {question_type}")
         prompt.append("Nothing else should appear in stdout.")
-        prompt.append("10. Do NOT run the script. I will do it on my own.")
-        prompt.append("11. IMPORTANT: Once you have completed your solution and are confident it is correct, add the marker '## SOLUTION COMPLETE' as a comment at the end of your code. Only add this marker when you are completely finished with your solution and do not need to make any more modifications.\n")
+        
+        prompt.append("")
+        prompt.append("=" * 60)
+        prompt.append("MANDATORY TESTING WORKFLOW - FOLLOW EXACTLY:")
+        prompt.append("=" * 60)
+        prompt.append("10. Write your initial code in answer.py")
+        prompt.append("11. Save the file WITHOUT any completion marker")
+        prompt.append("12. Run the command: python answer.py")
+        prompt.append("13. Check if the output matches the required format exactly")
+        prompt.append("14. If there are errors or wrong output:")
+        prompt.append("    - Read the error messages carefully")
+        prompt.append("    - Fix the code")
+        prompt.append("    - Save the file again")
+        prompt.append("    - Run python answer.py again")
+        prompt.append("15. Repeat step 14 until the code runs perfectly")
+        prompt.append("16. ONLY WHEN your code runs without errors AND produces correct output:")
+        prompt.append("    Add this exact line at the end: ## SOLUTION COMPLETE - TESTED AND WORKING")
+        prompt.append("")
+        prompt.append("WARNING: Adding the completion marker before testing will cause failure!")
+        prompt.append("The system will immediately evaluate your code when it sees the marker!")
+        prompt.append("=" * 60)
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
@@ -595,7 +614,7 @@ class IDETestHarness:
             print("   - Press Enter to submit")
             print(f"3. Save the final Python code as '{ANSWER_FILENAME}' in the workspace folder.")
         
-        print(f"\n< Waiting for {ANSWER_FILENAME} to be saved with '## SOLUTION COMPLETE' marker... >")
+        print(f"\n< Waiting for {ANSWER_FILENAME} to be saved with '## SOLUTION COMPLETE - TESTED AND WORKING' marker... >")
 
         # Set up the file watcher
         event_handler = SolutionFileHandler(ANSWER_FILENAME, workspace_dir)
@@ -632,13 +651,21 @@ class IDETestHarness:
         passed = False
         
         # Check for execution errors first
-        if execution_error or result.returncode != 0:
+        if result.returncode != 0:
             print("Test FAILED: Code execution error occurred")
+            print(f"Process exited with code: {result.returncode}")
             if execution_error:
                 print(f"Error details: {execution_error}")
-            if result.returncode != 0:
-                print(f"Process exited with code: {result.returncode}")
             passed = False
+        elif execution_error and ("Error" in execution_error or "Traceback" in execution_error):
+            # Only treat stderr as error if it contains actual error messages (not just warnings)
+            print("Test FAILED: Code execution error occurred")
+            print(f"Error details: {execution_error}")
+            passed = False
+        elif execution_error:
+            # Just warnings - log them but don't fail the test
+            print(f"Warnings (not errors): {execution_error}")
+            # Continue to verification logic below
         elif not program_output_str.strip():
             print("Test FAILED: Code executed but produced no output")
             passed = False
