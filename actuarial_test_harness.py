@@ -20,16 +20,155 @@ import numpy as np
 import pandas as pd
 import signal
 import sys
+import platform
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import pyperclip
+import pyautogui
 
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 
-RESULTS_DIR = "actuarial_results"
+RESULTS_DIR = "ide_results"
 STEP_SOLUTION_FILENAME = "step_solution.py"
+
+
+def get_platform_keys(ide_name=None):
+    """Get the correct key combinations for the current platform and IDE."""
+    system = platform.system().lower()
+    
+    # Base keys for the platform
+    if system == 'darwin':  # macOS
+        base_keys = {
+            'chat_activate': ['command', 'l'],
+            'new_chat': ['command', 'n'],
+            'paste': ['command', 'v']
+        }
+    else:  # Windows/Linux
+        base_keys = {
+            'chat_activate': ['ctrl', 'l'],
+            'new_chat': ['ctrl', 'n'],
+            'paste': ['ctrl', 'v']
+        }
+    
+    # IDE-specific overrides
+    if ide_name and ide_name.lower() == 'continue':
+        # For Continue, we only use chat_activate (Ctrl+L), no new_chat
+        base_keys['new_chat'] = None
+    elif ide_name and ide_name.lower() == 'cline':
+        # For Cline, use Cmd+' (or Ctrl+') to activate chat, Cmd+N for new chat
+        if system == 'darwin':  # macOS
+            base_keys['chat_activate'] = ['command', '\'']
+        else: 
+            base_keys['chat_activate'] = ['ctrl', '\'']
+    
+    return base_keys
+
+
+def automate_ide_input(prompt_text, ide_name, is_first_question=True, delay_before=2.0, delay_between=1.0):
+    """Automate the process of pasting prompt into the specified IDE.
+    
+    Args:
+        prompt_text: The text to paste (should already be in clipboard)
+        ide_name: Name of the IDE being tested (cursor, continue, etc.)
+        is_first_question: Whether this is the first question (needs Cmd+L to activate)
+        delay_before: Seconds to wait before starting automation
+        delay_between: Seconds to wait between key presses
+    """
+    keys = get_platform_keys(ide_name)
+    
+    print(f"Automating {ide_name} input...")
+    
+    # Countdown
+    for i in range(int(delay_before), 0, -1):
+        print(f"   Starting in {i}...")
+        time.sleep(1.0)
+    
+    try:
+        # Try to activate IDE application first (macOS specific)
+        system = platform.system().lower()
+        if system == 'darwin':
+            ide_app_name = "Cursor" if ide_name.lower() == "cursor" else ide_name.title()
+            print(f"Attempting to activate {ide_app_name} application...")
+            # Use AppleScript to activate the IDE
+            try:
+                subprocess.run(['osascript', '-e', f'tell application "{ide_app_name}" to activate'], 
+                             check=False, capture_output=True)
+                time.sleep(1.0)  # Give time for app to activate
+            except Exception as e:
+                print(f"Could not activate {ide_app_name} app: {e}")
+                print(f"Please make sure {ide_app_name} is manually focused.")
+        
+        # Activate chat box - for Continue, always activate; for others, only on first question
+        should_activate_chat = is_first_question or (ide_name and ide_name.lower() == 'continue')
+        if should_activate_chat:
+            print("   → Activating chat...")
+            chat_keys = keys['chat_activate']
+            
+            # Use keyDown/keyUp with delays for reliable key combinations
+            pyautogui.keyDown(chat_keys[0])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyDown(chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(chat_keys[0])
+            
+            # Give time for focus to switch
+            time.sleep(delay_between)
+        
+        # Create new chat (only for IDEs that support it)
+        if keys['new_chat'] is not None:
+            print("   → Creating new chat...")
+            new_chat_keys = keys['new_chat']
+            
+            pyautogui.keyDown(new_chat_keys[0])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyDown(new_chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(new_chat_keys[1])
+            time.sleep(0.1)  # Small delay
+            pyautogui.keyUp(new_chat_keys[0])
+            
+            # Give time for confirmation dialog to appear if needed
+            time.sleep(delay_between)
+            
+            # Press Enter to confirm new chat if dialog appears
+            print("   → Confirming new chat...")
+            pyautogui.press('enter')
+            
+            # Give more time for new chat to be created
+            time.sleep(delay_between)
+        else:
+            print("   → Skipping new chat creation (not supported by this IDE)")
+            time.sleep(delay_between)
+        
+        # Paste the prompt
+        print("   → Pasting prompt...")
+        paste_keys = keys['paste']
+        
+        pyautogui.keyDown(paste_keys[0])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyDown(paste_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(paste_keys[1])
+        time.sleep(0.1)  # Small delay
+        pyautogui.keyUp(paste_keys[0])
+        
+        time.sleep(delay_between)
+        
+        # Press Enter to submit
+        print("   → Submitting prompt...")
+        pyautogui.press('enter')
+        
+        print("Automation completed successfully!")
+        return True
+        
+    except Exception as e:
+        print(f"Automation failed: {e}")
+        print("Please manually paste the prompt from clipboard.")
+        return False
 
 
 class StepSolutionHandler(FileSystemEventHandler):
@@ -84,7 +223,7 @@ class ActuarialTestHarness:
         self.method_name = method_name
         self.mode = mode
         self.method_dir = Path("test_data") / method_name
-        self.results_dir = Path(RESULTS_DIR) / method_name
+        self.results_dir = Path(RESULTS_DIR) / f"{method_name}_unit"
         self.ground_truth = self._load_ground_truth()
         self.steps = self._define_steps()
         self.first_question = True
@@ -105,6 +244,11 @@ class ActuarialTestHarness:
         ground_truth_path = self.method_dir / "ground_truth.json"
         with open(ground_truth_path, 'r') as f:
             return json.load(f)
+    
+    def is_auto_mode_supported(self, ide_name: str) -> bool:
+        """Check if auto mode is supported for the given IDE."""
+        supported_ides = ['cursor', 'continue', 'cline']
+        return ide_name.lower() in supported_ides
     
     def _define_steps(self) -> List[Dict[str, Any]]:
         """Define the steps for the Friedland XYZ development method."""
@@ -155,34 +299,24 @@ class ActuarialTestHarness:
         csv_files = list(self.method_dir.glob("*.csv"))
         return csv_files
     
-    def _create_base_file(self, workspace_dir: Path, previous_code: str = "") -> str:
-        """Create the base Python file with data paths and previous code."""
-        lines = []
-        lines.append("import pandas as pd")
-        lines.append("import numpy as np")
-        lines.append("import chainladder as cl")
-        lines.append("from pathlib import Path")
-        lines.append("")
+    def _get_starter_code_path(self, step_id: str) -> Path:
+        """Get the path to the starter code file for a step."""
+        return self.method_dir / f"{step_id}_starter_code.py"
+    
+    def _load_starter_code(self, step_id: str) -> str:
+        """Load pre-populated starter code for this step.
         
-        # Add data file paths
-        data_files = self._get_data_files()
-        if data_files:
-            lines.append("# Data file paths")
-            for i, data_file in enumerate(sorted(data_files)):
-                abs_path = data_file.resolve()
-                lines.append(f"data_path_{i+1} = r'{abs_path}'")
-            lines.append("")
+        The starter code already contains working code from all previous steps,
+        so it can be tested independently.
+        """
+        starter_code_path = self._get_starter_code_path(step_id)
         
-        # Add previous code if any
-        if previous_code:
-            lines.append("# Code from previous steps")
-            lines.append(previous_code)
-            lines.append("")
+        with open(starter_code_path, 'r') as f:
+            starter_code = f.read()
         
-        lines.append("### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###")
-        lines.append("")
+        starter_code += "\n\n### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###\n"
         
-        return "\n".join(lines)
+        return starter_code
     
     def _get_step_1_prompt(self, step_data: Dict[str, Any]) -> str:
         """Generate prompt for step 1."""
@@ -221,9 +355,6 @@ class ActuarialTestHarness:
         prompt.append("Store the results in variables:")
         prompt.append("- ldfs_weighted: array of LDFs")
         prompt.append("")
-        prompt.append("Expected LDFs (for validation):")
-        prompt.append("1.674, 1.325, 1.147, 1.060, 1.060, 1.028, 1.005, 0.998, 0.993, 0.999")
-        prompt.append("")
         prompt.append("When complete and tested, add this exact line at the end:")
         prompt.append("## STEP COMPLETE - TESTED AND WORKING")
         
@@ -242,9 +373,6 @@ class ActuarialTestHarness:
         prompt.append("Store the results in variables:")
         prompt.append("- ldfs_simple: array of LDFs")
         prompt.append("")
-        prompt.append("Expected LDFs (for validation):")
-        prompt.append("1.827, 1.417, 1.247, 1.124, 1.082, 1.040, 1.031, 0.997, 0.991, 0.999")
-        prompt.append("")
         prompt.append("When complete and tested, add this exact line at the end:")
         prompt.append("## STEP COMPLETE - TESTED AND WORKING")
         
@@ -253,19 +381,24 @@ class ActuarialTestHarness:
     def _get_step_4_prompt(self, step_data: Dict[str, Any]) -> str:
         """Generate prompt for step 4."""
         prompt = []
-        prompt.append("STEP 4: Calculate CDFs with Tail Factor")
+        prompt.append("STEP 4: Calculate CDFs with Tail Factor using TailConstant")
         prompt.append("")
         prompt.append("Your task:")
-        prompt.append("1. Take the volume-weighted LDFs from Step 2 (ldfs_weighted)")
-        prompt.append("2. Append a tail factor of 1.00 representing development from age 132 to Ultimate")
-        prompt.append("3. Calculate Cumulative Development Factors (CDFs) by taking cumulative product from tail to first age")
+        prompt.append("1. Use chainladder.TailConstant to apply a tail factor of 1.00")
+        prompt.append("2. Apply the tail to the triangle with volume-weighted development from Step 2")
+        prompt.append("3. Extract the LDFs and CDFs with tail applied")
         prompt.append("")
-        prompt.append("Formula: CDF at each age = product of all LDFs from that age to ultimate")
-        prompt.append("Hint: Use np.cumprod() on reversed array, then reverse result")
+        prompt.append("Workflow:")
+        prompt.append("- Import TailConstant from chainladder")
+        prompt.append("- Create TailConstant(tail=1.0)")
+        prompt.append("- Fit the tail to dev_weighted.fit_transform(triangle)")
+        prompt.append("- Extract tail.ldf_.values and tail.cdf_.values")
         prompt.append("")
         prompt.append("Store the results in variables:")
-        prompt.append("- ldfs_with_tail: LDFs including tail factor (length 11)")
-        prompt.append("- cdfs: Cumulative Development Factors (length 11)")
+        prompt.append("- tail: the TailConstant object")
+        prompt.append("- triangle_with_tail: the triangle with development applied")
+        prompt.append("- ldfs_with_tail: LDFs including tail factor")
+        prompt.append("- cdfs: Cumulative Development Factors")
         prompt.append("")
         prompt.append("When complete and tested, add this exact line at the end:")
         prompt.append("## STEP COMPLETE - TESTED AND WORKING")
@@ -275,21 +408,24 @@ class ActuarialTestHarness:
     def _get_step_5_prompt(self, step_data: Dict[str, Any]) -> str:
         """Generate prompt for step 5."""
         prompt = []
-        prompt.append("STEP 5: Calculate Ultimate Claims")
+        prompt.append("STEP 5: Calculate Ultimate Claims using Chainladder Method")
         prompt.append("")
         prompt.append("Your task:")
-        prompt.append("1. Use the CDFs from Step 4 to calculate ultimate claims for each accident year")
-        prompt.append("2. Get the latest diagonal values from the triangle")
-        prompt.append("3. For each accident year, multiply latest value by appropriate CDF")
+        prompt.append("1. Use chainladder.Chainladder model to calculate ultimates")
+        prompt.append("2. Fit the Chainladder model to triangle_with_tail (from Step 4)")
+        prompt.append("3. Extract ultimate values from the result's ultimate_ attribute")
         prompt.append("4. Calculate total ultimates across all years")
         prompt.append("")
-        prompt.append("Formula: Ultimate = Latest Value × CDF at that development age")
+        prompt.append("Workflow:")
+        prompt.append("- Import Chainladder from chainladder")
+        prompt.append("- Create Chainladder() model")
+        prompt.append("- Fit it to triangle_with_tail")
+        prompt.append("- Extract cl_result.ultimate_.values")
         prompt.append("")
         prompt.append("Store the results in variables:")
+        prompt.append("- cl_result: the fitted Chainladder model")
         prompt.append("- ultimates: array of ultimate values by accident year")
         prompt.append("- total_ultimate: sum of all ultimates")
-        prompt.append("")
-        prompt.append("Expected total ultimate (validation): approximately 540,972,000")
         prompt.append("")
         prompt.append("When complete and tested, add this exact line at the end:")
         prompt.append("## STEP COMPLETE - TESTED AND WORKING")
@@ -299,18 +435,20 @@ class ActuarialTestHarness:
     def _get_step_6_prompt(self, step_data: Dict[str, Any]) -> str:
         """Generate prompt for step 6."""
         prompt = []
-        prompt.append("STEP 6: Calculate IBNR Reserves")
+        prompt.append("STEP 6: Extract IBNR Reserves")
         prompt.append("")
         prompt.append("Your task:")
-        prompt.append("1. Calculate IBNR (Incurred But Not Reported) reserves")
-        prompt.append("2. IBNR = Ultimate - Latest for each accident year")
+        prompt.append("1. Extract IBNR reserves from the cl_result object (from Step 5)")
+        prompt.append("2. The Chainladder model result has an ibnr_ attribute with calculated reserves")
         prompt.append("3. Calculate total IBNR across all years")
+        prompt.append("")
+        prompt.append("Workflow:")
+        prompt.append("- Extract cl_result.ibnr_.values to get IBNR by accident year")
+        prompt.append("- Sum to get total IBNR")
         prompt.append("")
         prompt.append("Store the results in variables:")
         prompt.append("- ibnr: array of IBNR values by accident year")
         prompt.append("- total_ibnr: sum of all IBNR")
-        prompt.append("")
-        prompt.append("Expected total IBNR (validation): approximately 91,346,000")
         prompt.append("")
         prompt.append("When complete and tested, add this exact line at the end:")
         prompt.append("## STEP COMPLETE - TESTED AND WORKING")
@@ -638,7 +776,7 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
         
         return {"passed": False, "error": "Could not parse total IBNR from output"}
     
-    def run_step(self, step_data: Dict[str, Any], ide_name: str, previous_code: str = "") -> Dict[str, Any]:
+    def run_step(self, step_data: Dict[str, Any], ide_name: str) -> Dict[str, Any]:
         """Run a single step of the test."""
         step_id = step_data["step_id"]
         workspace_dir = self.results_dir / step_id
@@ -648,11 +786,11 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
             shutil.rmtree(workspace_dir)
         workspace_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create base file with previous code
-        base_content = self._create_base_file(workspace_dir, previous_code)
+        # Load pre-populated starter code (includes working code from all previous steps)
+        starter_content = self._load_starter_code(step_id)
         solution_path = workspace_dir / STEP_SOLUTION_FILENAME
         with open(solution_path, 'w') as f:
-            f.write(base_content)
+            f.write(starter_content)
         
         # Generate prompt
         prompt = step_data["prompt_template"](step_data)
@@ -675,8 +813,59 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
         print(f"Workspace: {workspace_dir.absolute()}")
         print(f"1. Open the folder in '{ide_name}'")
         print(f"2. Work in file: {STEP_SOLUTION_FILENAME}")
-        print(f"3. Paste and follow the instructions from clipboard")
-        print(f"4. When complete, add: ## STEP COMPLETE - TESTED AND WORKING")
+        
+        if self.mode == 'auto':
+            print(f"3. The system will automatically:")
+            if ide_name.lower() == 'continue':
+                print("   - Activate chat (Cmd+L or Ctrl+L)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
+            elif ide_name.lower() == 'cline':
+                print("   - Activate chat (Cmd+' or Ctrl+')")
+                print("   - Create a new chat (Cmd+N or Ctrl+N)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
+            else:
+                print("   - Activate chat (Cmd+L or Ctrl+L)")
+                print("   - Create a new chat (Cmd+N or Ctrl+N)")
+                print("   - Paste the prompt (Cmd+V or Ctrl+V)")
+                print("   - Submit the prompt (Enter)")
+            print(f"4. When complete, add: ## STEP COMPLETE - TESTED AND WORKING")
+            
+            # Attempt automation
+            automation_success = automate_ide_input(full_prompt, ide_name, is_first_question=self.first_question)
+            
+            # After first step, set flag to False
+            if self.first_question:
+                self.first_question = False
+            
+            if not automation_success:
+                print("\nFalling back to manual mode...")
+                print("Please manually:")
+                if ide_name.lower() == 'continue':
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                elif ide_name.lower() == 'cline':
+                    print(f"- Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
+                    print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                else:
+                    print(f"- Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                    print("- Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                print("- Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
+                print("- Press Enter to submit")
+        else:
+            print("3. Generate the solution using the prompt from your clipboard:")
+            if ide_name.lower() == 'continue':
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+            elif ide_name.lower() == 'cline':
+                print(f"   - Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
+                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+            else:
+                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+            print("   - Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
+            print("   - Press Enter to submit")
+            print(f"4. When complete, add: ## STEP COMPLETE - TESTED AND WORKING")
+        
         print(f"\n< Waiting for {STEP_SOLUTION_FILENAME} to be marked complete... >")
         
         # Set up file watcher
@@ -706,22 +895,10 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
                 for error in validation_result["errors"]:
                     print(f"  - {error}")
         
-        # Extract code from solution file (excluding completion marker)
-        with open(solution_path, 'r') as f:
-            solution_code = f.read()
-        
-        # Remove completion marker and get code after the write line
-        code_parts = solution_code.split("### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###")
-        if len(code_parts) > 1:
-            new_code = code_parts[1].replace("## STEP COMPLETE - TESTED AND WORKING", "").strip()
-        else:
-            new_code = ""
-        
         return {
             "step_id": step_id,
             "passed": validation_result["passed"],
             "validation_result": validation_result,
-            "new_code": new_code,
             "workspace": str(workspace_dir.absolute())
         }
     
@@ -756,6 +933,26 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
         print(f"Mode: {self.mode}")
         print("=" * 80)
         
+        # Check if auto mode is supported
+        if self.mode == 'auto' and not self.is_auto_mode_supported(ide_name):
+            print(f"ERROR: Auto mode is not supported for '{ide_name}'.")
+            print("Auto mode is only available for: cursor, continue, cline")
+            return
+        
+        # One-time setup for auto mode
+        if self.mode == 'auto' and self.first_question:
+            print(f"\nPrepare {ide_name} for automation:")
+            print(f"1. Open the workspace folder for the first step in {ide_name}")
+            print(f"2. Make sure {ide_name} is open and visible")
+            print(f"3. Click on {ide_name} to ensure it's the active window")
+            print("Press Ctrl+C anytime to stop")
+            input(f"Press Enter when {ide_name} is ready...")
+            print("Starting automated test run...")
+            
+            # Configure pyautogui
+            pyautogui.FAILSAFE = True
+            pyautogui.PAUSE = 0.5
+        
         # Determine which steps to run
         if single_step:
             steps_to_run = [s for s in self.steps if s["step_id"] == single_step]
@@ -772,19 +969,14 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
             steps_to_run = self.steps
         
         results = []
-        cumulative_code = ""
         
         for i, step in enumerate(steps_to_run):
             print(f"\n{'=' * 80}")
             print(f"Running Step {i+1}/{len(steps_to_run)}: {step['step_id']}")
             print(f"{'=' * 80}")
             
-            result = self.run_step(step, ide_name, cumulative_code)
+            result = self.run_step(step, ide_name)
             results.append(result)
-            
-            # Add this step's code to cumulative code
-            if result["new_code"]:
-                cumulative_code += "\n" + result["new_code"] + "\n"
             
             # Stop if step failed
             if not result["passed"]:
