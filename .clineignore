@@ -1,0 +1,38 @@
+# Prevent access to ground truth and reference solutions during testing
+
+# Ground truth files (contain expected answers)
+**/ground_truth.json
+
+# Reference implementations (contain complete solutions)
+reference_*.py
+
+# Starter code files (contain solutions to previous steps)
+**/*_starter_code.py
+
+# Node modules and dependencies
+node_modules/
+
+# Virtual environment
+venv/
+
+# Generated results and validation files
+ide_results/
+actuarial_results/
+
+# Git files
+.git/
+.gitignore
+
+# IDE configurations
+.vscode/
+.idea/
+
+# Temporary and system files
+*.pyc
+__pycache__/
+.DS_Store
+*.log
+
+# Test artifacts
+test.csv
+
