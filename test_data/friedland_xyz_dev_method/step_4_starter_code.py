@@ -42,15 +42,23 @@ triangle = cl.Triangle(
 )
 
 ### STEP 2: Calculate Volume-Weighted Average LDFs (from reference implementation)
-dev_weighted = cl.Development(average='volume', n_periods=3)
-dev_weighted.fit(triangle)
-ldfs_weighted = dev_weighted.ldf_.values[0, 0, 0, :]
+dev_weighted_pipe = cl.Pipeline(
+    steps=[
+        ('dev', cl.Development(average='volume', n_periods=3))
+    ]
+)
+dev_weighted_pipe.fit(triangle)
+ldfs_weighted = dev_weighted_pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
 
 
 ### STEP 3: Calculate Simple Average LDFs (from reference implementation)
-dev_simple = cl.Development(average='simple', n_periods=5)
-dev_simple.fit(triangle)
-ldfs_simple = dev_simple.ldf_.values[0, 0, 0, :]
+dev_simple_pipe = cl.Pipeline(
+    steps=[
+        ('dev', cl.Development(average='simple', n_periods=5))
+    ]
+)
+dev_simple_pipe.fit(triangle)
+ldfs_simple = dev_simple_pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
 
 
 ### STEP 4: Calculate CDFs with Tail Factor

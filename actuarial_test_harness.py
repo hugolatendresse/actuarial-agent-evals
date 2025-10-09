@@ -366,7 +366,7 @@ class ActuarialTestHarness:
         prompt.append("STEP 4: Apply Tail Factor and Calculate CDFs")
         prompt.append("")
         prompt.append("Apply a tail factor of 1.00 from age 132 to ultimate.")
-        prompt.append("Calculate the CDFs.")
+        prompt.append("Calculate the CDFs using the volume-weighted LDFs.")
         prompt.append("")
         prompt.append("Store the results in variables:")
         prompt.append("- triangle_with_tail: triangle with tail factor applied")

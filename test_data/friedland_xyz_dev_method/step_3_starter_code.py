@@ -42,9 +42,13 @@ triangle = cl.Triangle(
 )
 
 ### STEP 2: Calculate Volume-Weighted Average LDFs (from reference implementation)
-dev_weighted = cl.Development(average='volume', n_periods=3)
-dev_weighted.fit(triangle)
-ldfs_weighted = dev_weighted.ldf_.values[0, 0, 0, :]
+dev_weighted_pipe = cl.Pipeline(
+    steps=[
+        ('dev', cl.Development(average='volume', n_periods=3))
+    ]
+)
+dev_weighted_pipe.fit(triangle)
+ldfs_weighted = dev_weighted_pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
 
 
 ### STEP 3: Calculate Simple Average LDFs

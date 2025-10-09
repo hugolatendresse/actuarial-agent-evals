@@ -42,41 +42,49 @@ triangle = cl.Triangle(
 )
 
 ### STEP 2: Calculate Volume-Weighted Average LDFs (from reference implementation)
-dev_weighted = cl.Development(average='volume', n_periods=3)
-dev_weighted.fit(triangle)
-ldfs_weighted = dev_weighted.ldf_.values[0, 0, 0, :]
+dev_weighted_pipe = cl.Pipeline(
+    steps=[
+        ('dev', cl.Development(average='volume', n_periods=3))
+    ]
+)
+dev_weighted_pipe.fit(triangle)
+ldfs_weighted = dev_weighted_pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
 
 
 ### STEP 3: Calculate Simple Average LDFs (from reference implementation)
-dev_simple = cl.Development(average='simple', n_periods=5)
-dev_simple.fit(triangle)
-ldfs_simple = dev_simple.ldf_.values[0, 0, 0, :]
+dev_simple_pipe = cl.Pipeline(
+    steps=[
+        ('dev', cl.Development(average='simple', n_periods=5))
+    ]
+)
+dev_simple_pipe.fit(triangle)
+ldfs_simple = dev_simple_pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
 
 
 ### STEP 4: Calculate CDFs with Tail Factor (from reference implementation)
-from chainladder import TailConstant
-
-# Apply tail factor of 1.00 using TailConstant
-tail = TailConstant(tail=1.0)
-triangle_with_tail = dev_weighted.fit_transform(triangle)
-tail.fit(triangle_with_tail)
-
-# Extract LDFs and CDFs with tail applied
-ldfs_with_tail = tail.ldf_.values[0, 0, 0, :]
-cdfs = tail.cdf_.values[0, 0, 0, :]
+dev_tail_pipe = cl.Pipeline(
+    steps=[
+        ('dev', dev_weighted_pipe.named_steps.dev),
+        ('tail', cl.TailConstant(tail=1.0))
+    ]
+)
+dev_tail_pipe.fit(triangle)
+ldfs_with_tail = dev_tail_pipe.named_steps.tail.ldf_.values[0, 0, 0, :]
+cdfs = dev_tail_pipe.named_steps.tail.cdf_.values[0, 0, 0, :]
 
 
 ### STEP 5: Calculate Ultimates (from reference implementation)
-from chainladder import Chainladder
-
-# Apply Chainladder method to triangle with tail-extended development
-cl_model = Chainladder()
-cl_result = cl_model.fit(triangle_with_tail)
-
-# Extract ultimate values
-ultimates = cl_result.ultimate_.values[0, 0, :, 0]
+model_pipe = cl.Pipeline(
+    steps=[
+        ('dev', dev_tail_pipe.named_steps.dev),
+        ('tail', dev_tail_pipe.named_steps.tail),
+        ('model', cl.Chainladder())
+    ]
+)
+model_pipe.fit(triangle)
+ultimates = model_pipe.named_steps.model.ultimate_.values[0, 0, :, 0]
 total_ultimate = np.nansum(ultimates)
 
 
 ### STEP 6: Calculate IBNR
-# Write your code below to extract IBNR from cl_result.ibnr_ attribute
+# Write your code below to calculate IBNR

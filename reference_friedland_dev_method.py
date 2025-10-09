@@ -94,16 +94,21 @@ def step_1_load_triangle():
 def step_2_weighted_average_ldfs(triangle, n_periods=3):
     """
     Step 2: Calculate weighted average LDFs using specified number of periods
-    Returns: weighted average LDFs
+    Uses Pipeline architecture to fit development patterns
+    Returns: development estimator with fitted LDFs
     """
     print("\n" + "=" * 80)
     print(f"STEP 2: Calculate Weighted Average LDFs (using {n_periods} periods)")
     print("=" * 80)
     
-    dev = cl.Development(average='volume', n_periods=n_periods)
-    dev.fit(triangle)
+    pipe = cl.Pipeline(
+        steps=[
+            ('dev', cl.Development(average='volume', n_periods=n_periods))
+        ]
+    )
+    pipe.fit(triangle)
     
-    ldfs_weighted = dev.ldf_.values[0, 0, 0, :]
+    ldfs_weighted = pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
     
     print(f"\nWeighted Average LDFs (using {n_periods} periods):")
     for i, ldf in enumerate(ldfs_weighted):
@@ -117,22 +122,27 @@ def step_2_weighted_average_ldfs(triangle, n_periods=3):
         "development_ages": [int(x) for x in triangle.development[:-1]]
     }
     
-    return dev, ldfs_weighted, ground_truth
+    return pipe, ldfs_weighted, ground_truth
 
 
 def step_3_simple_average_ldfs(triangle, n_periods=5):
     """
     Step 3: Calculate simple (straight) average LDFs using specified number of periods
-    Returns: simple average LDFs
+    Uses Pipeline architecture to fit development patterns
+    Returns: development pipeline with fitted LDFs
     """
     print("\n" + "=" * 80)
     print(f"STEP 3: Calculate Simple Average LDFs (using {n_periods} periods)")
     print("=" * 80)
     
-    dev = cl.Development(average='simple', n_periods=n_periods)
-    dev.fit(triangle)
+    pipe = cl.Pipeline(
+        steps=[
+            ('dev', cl.Development(average='simple', n_periods=n_periods))
+        ]
+    )
+    pipe.fit(triangle)
     
-    ldfs_simple = dev.ldf_.values[0, 0, 0, :]
+    ldfs_simple = pipe.named_steps.dev.ldf_.values[0, 0, 0, :]
     
     print(f"\nSimple Average LDFs (using {n_periods} periods):")
     for i, ldf in enumerate(ldfs_simple):
@@ -146,13 +156,14 @@ def step_3_simple_average_ldfs(triangle, n_periods=5):
         "development_ages": [int(x) for x in triangle.development[:-1]]
     }
     
-    return dev, ldfs_simple, ground_truth
+    return pipe, ldfs_simple, ground_truth
 
 
-def step_4_calculate_cdfs_with_tail(ldfs, tail_factor=1.00, from_age=132):
+def step_4_calculate_cdfs_with_tail(triangle, dev_pipe, tail_factor=1.00, from_age=132):
     """
     Step 4: Calculate CDFs (Cumulative Development Factors) by applying a tail factor
-    Returns: CDFs with tail factor applied
+    Uses Pipeline architecture to chain Development and TailConstant estimators
+    Returns: pipeline with tail applied and extracted CDFs
     """
     print("\n" + "=" * 80)
     print(f"STEP 4: Calculate CDFs with Tail Factor")
@@ -160,7 +171,16 @@ def step_4_calculate_cdfs_with_tail(ldfs, tail_factor=1.00, from_age=132):
     
     print(f"\nApplying tail factor of {tail_factor:.2f} from age {from_age} to Ultimate")
     
-    ldfs_with_tail = np.append(ldfs, tail_factor)
+    pipe = cl.Pipeline(
+        steps=[
+            ('dev', dev_pipe.named_steps.dev),
+            ('tail', cl.TailConstant(tail=tail_factor))
+        ]
+    )
+    pipe.fit(triangle)
+    
+    ldfs_with_tail = pipe.named_steps.tail.ldf_.values[0, 0, 0, :]
+    cdfs = pipe.named_steps.tail.cdf_.values[0, 0, 0, :]
     
     print("\nLDFs with tail factor:")
     for i, ldf in enumerate(ldfs_with_tail):
@@ -168,8 +188,6 @@ def step_4_calculate_cdfs_with_tail(ldfs, tail_factor=1.00, from_age=132):
             print(f"  Age {12*(i+1)}-to-{12*(i+2)}: {ldf:.6f}")
         else:
             print(f"  Age {from_age}-to-Ult: {ldf:.6f}")
-    
-    cdfs = np.cumprod(ldfs_with_tail[::-1])[::-1]
     
     print("\nCumulative Development Factors (CDFs):")
     for i, cdf in enumerate(cdfs):
@@ -185,17 +203,20 @@ def step_4_calculate_cdfs_with_tail(ldfs, tail_factor=1.00, from_age=132):
         "cdfs": cdfs.tolist()
     }
     
-    return cdfs, ldfs_with_tail, ground_truth
+    return pipe, cdfs, ldfs_with_tail, ground_truth
 
 
-def step_5_chainladder_method(triangle, cdfs):
+def step_5_chainladder_method(triangle, dev_tail_pipe):
     """
-    Step 5: Perform Chainladder method using the triangle and selected CDFs
+    Step 5: Perform Chainladder method using the triangle and pipeline from step 4
+    Uses complete Pipeline with Development, Tail, and Chainladder model
     Returns: ultimates by accident year
     """
     print("\n" + "=" * 80)
     print("STEP 5: Perform Chainladder Method and Calculate Ultimates")
     print("=" * 80)
+    
+    cdfs = dev_tail_pipe.named_steps.tail.cdf_.values[0, 0, 0, :]
     
     print("\nUsing CDFs from Step 4 (volume-weighted with tail factor):")
     for i, cdf in enumerate(cdfs):
@@ -204,18 +225,16 @@ def step_5_chainladder_method(triangle, cdfs):
         else:
             print(f"  Age-to-Ult: {cdf:.6f}")
     
-    latest_values = triangle.latest_diagonal.values[0, 0, :, 0]
+    pipe = cl.Pipeline(
+        steps=[
+            ('dev', dev_tail_pipe.named_steps.dev),
+            ('tail', dev_tail_pipe.named_steps.tail),
+            ('model', cl.Chainladder())
+        ]
+    )
+    pipe.fit(triangle)
     
-    ultimates = np.zeros(len(latest_values))
-    for i, latest_val in enumerate(latest_values):
-        if not np.isnan(latest_val):
-            latest_age_idx = len(triangle.development) - 1 - i
-            if latest_age_idx < len(cdfs):
-                ultimates[i] = latest_val * cdfs[latest_age_idx]
-            else:
-                ultimates[i] = latest_val
-        else:
-            ultimates[i] = np.nan
+    ultimates = pipe.named_steps.model.ultimate_.values[0, 0, :, 0]
     
     print("\nUltimates by Accident Year:")
     for i, origin in enumerate(triangle.origin):
@@ -237,12 +256,13 @@ def step_5_chainladder_method(triangle, cdfs):
         "total_ultimate": float(total_ultimate)
     }
     
-    return ultimates, ground_truth
+    return pipe, ultimates, ground_truth
 
 
-def step_6_calculate_ibnr(triangle, ultimates):
+def step_6_calculate_ibnr(triangle, model_pipe):
     """
     Step 6: Calculate IBNR (Incurred But Not Reported) reserves
+    Uses the fitted pipeline from step 5 to extract IBNR
     Returns: IBNR by accident year and total
     """
     print("\n" + "=" * 80)
@@ -250,8 +270,8 @@ def step_6_calculate_ibnr(triangle, ultimates):
     print("=" * 80)
     
     latest_values = triangle.latest_diagonal.values[0, 0, :, 0]
-    
-    ibnr = ultimates - latest_values
+    ultimates = model_pipe.named_steps.model.ultimate_.values[0, 0, :, 0]
+    ibnr = model_pipe.named_steps.model.ibnr_.values[0, 0, :, 0]
     
     print("\nIBNR by Accident Year:")
     for i, origin in enumerate(triangle.origin):
@@ -296,25 +316,26 @@ def main():
     all_ground_truth["step_1"] = gt_step1
     
     n_periods_weighted = 3
-    dev_weighted, ldfs_weighted, gt_step2 = step_2_weighted_average_ldfs(triangle, n_periods=n_periods_weighted)
+    dev_weighted_pipe, ldfs_weighted, gt_step2 = step_2_weighted_average_ldfs(triangle, n_periods=n_periods_weighted)
     all_ground_truth["step_2"] = gt_step2
     
     n_periods_simple = 5
-    dev_simple, ldfs_simple, gt_step3 = step_3_simple_average_ldfs(triangle, n_periods=n_periods_simple)
+    dev_simple_pipe, ldfs_simple, gt_step3 = step_3_simple_average_ldfs(triangle, n_periods=n_periods_simple)
     all_ground_truth["step_3"] = gt_step3
     
     tail_factor = 1.00
-    cdfs_with_tail, ldfs_with_tail, gt_step4 = step_4_calculate_cdfs_with_tail(
-        ldfs_weighted, 
+    dev_tail_pipe, cdfs_with_tail, ldfs_with_tail, gt_step4 = step_4_calculate_cdfs_with_tail(
+        triangle,
+        dev_weighted_pipe,
         tail_factor=tail_factor, 
         from_age=132
     )
     all_ground_truth["step_4"] = gt_step4
     
-    ultimates, gt_step5 = step_5_chainladder_method(triangle, cdfs_with_tail)
+    model_pipe, ultimates, gt_step5 = step_5_chainladder_method(triangle, dev_tail_pipe)
     all_ground_truth["step_5"] = gt_step5
     
-    ibnr, gt_step6 = step_6_calculate_ibnr(triangle, ultimates)
+    ibnr, gt_step6 = step_6_calculate_ibnr(triangle, model_pipe)
     all_ground_truth["step_6"] = gt_step6
     
     all_ground_truth_clean = convert_nan_to_none(all_ground_truth)
