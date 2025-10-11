@@ -244,8 +244,12 @@ class ActuarialIntegrationTest:
     
     def _generate_prompt(self) -> str:
         """Generate the integration test prompt."""
+        workspace_dir = self.results_dir.absolute()
         prompt = []
         prompt.append("Complete Chainladder Development Method Analysis")
+        prompt.append("")
+        prompt.append(f"WORKSPACE: {workspace_dir}")
+        prompt.append(f"Navigate to this directory and work in: integration_solution.py")
         prompt.append("")
         prompt.append("Perform a complete chainladder development method analysis on the provided")
         prompt.append("triangle data to calculate ultimate claims and IBNR reserves.")
@@ -262,7 +266,8 @@ class ActuarialIntegrationTest:
         prompt.append("- total_ibnr: sum of IBNR reserves across all accident years")
         prompt.append("")
         prompt.append("IMPORTANT NOTES:")
-        prompt.append("- Work in the integration_solution.py file in THIS workspace")
+        prompt.append(f"- The file integration_solution.py is located at: {workspace_dir}/integration_solution.py")
+        prompt.append("- Write your code BELOW the marker line in that file")
         prompt.append("- All data file paths are already defined with absolute paths")
         prompt.append("- If using relative paths, they should be relative to the project root")
         prompt.append("")
@@ -424,9 +429,8 @@ print(f"TOTAL_IBNR: {{total_ibnr:.2f}}")
             print("--------------")
         
         print("\n--- ACTION REQUIRED ---")
-        print(f"Workspace: {workspace_dir.absolute()}")
-        print(f"File: {SOLUTION_FILENAME}")
-        print(f"1. Open the folder in '{ide_name}'")
+        print(f"Workspace folder: {workspace_dir.absolute()}")
+        print(f"1. Open the folder above in '{ide_name}' (NOT the project root)")
         
         if self.mode == 'auto':
             print(f"2. The system will automatically:")
@@ -452,7 +456,7 @@ print(f"TOTAL_IBNR: {{total_ibnr:.2f}}")
                 print("Please manually paste and submit the prompt")
         else:
             print("2. Activate chat and paste the prompt from clipboard")
-            print("3. Work in integration_solution.py")
+            print(f"3. Work in file: {SOLUTION_FILENAME}")
         
         print(f"\n< Waiting for {SOLUTION_FILENAME} to be marked complete... >")
         
@@ -498,8 +502,9 @@ print(f"TOTAL_IBNR: {{total_ibnr:.2f}}")
             "method": self.method_name,
             "ide": ide_name,
             "mode": self.mode,
-            "passed": validation_result["passed"],
-            "validation_details": validation_result,
+            "passed": bool(validation_result["passed"]),
+            "validation_details": {k: (bool(v) if isinstance(v, (np.bool_, bool)) else v) 
+                                  for k, v in validation_result.items()},
             "workspace": str(workspace_dir.absolute()),
             "timestamp": time.time()
         }
