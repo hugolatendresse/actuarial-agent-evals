@@ -58,16 +58,32 @@ df_claim_ratio = pd.read_csv(claim_ratio_data_path)
 df_claim_ratio['selected_claim_ratio'] = df_claim_ratio['selected_claim_ratio'].astype(str).str.replace('%', '')
 df_claim_ratio['selected_claim_ratio'] = pd.to_numeric(df_claim_ratio['selected_claim_ratio'], errors='coerce') / 100
 
-# Calculate apriori ultimate claims
-apriori_df = df_premium.merge(df_claim_ratio, on='accident_year')
-apriori_df['apriori_ultimate'] = apriori_df['earned_premium'] * apriori_df['selected_claim_ratio']
-apriori_df = apriori_df.set_index('accident_year')['apriori_ultimate']
+# STEP 1 SOLUTION: Calculate BF Ultimates
+df_merged = pd.merge(df_premium, df_claim_ratio, on='accident_year')
+df_merged['apriori_ultimate'] = df_merged['earned_premium'] * df_merged['selected_claim_ratio']
 
-# Apply Bornhuetter-Ferguson method
-# (Student should have completed this in step 1)
-# Assuming bf_model is the fitted BornhuetterFerguson model
+# Create apriori triangle with same structure as loss triangle
+apriori_array = np.zeros_like(triangle.values)
+for i, row in df_merged.iterrows():
+    apriori_array[0, 0, i, :] = row['apriori_ultimate']
+
+apriori_triangle = triangle.copy()
+apriori_triangle.values = apriori_array
+
+# Apply Bornhuetter-Ferguson method with pipeline
+bf_pipe = cl.Pipeline(steps=[
+    ('dev', cl.Development(average='volume', n_periods=2)),
+    ('tail', cl.TailConstant(tail=1.05)),
+    ('model', cl.BornhuetterFerguson(apriori=1.0))
+])
+
+bf_pipe.fit(triangle, sample_weight=apriori_triangle.latest_diagonal)
+
+# BF ultimate from Step 1
+bf_ultimate = bf_pipe.named_steps.model.ultimate_
+total_bf_ultimate = bf_ultimate.sum().sum()
 
 ### STEP 2: Extract BF IBNR
 # Access the IBNR from the BF model and calculate total
-# Store results in: bf_ibnr, total_bf_ibnr
+# Store results in: total_bf_ibnr
 
