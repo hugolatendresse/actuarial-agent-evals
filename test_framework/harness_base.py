@@ -217,10 +217,19 @@ class UnitTestHarness(BaseTestHarness):
         
         steps = self.config.steps
         if single_step:
-            steps_to_run = [s for s in steps if s.step_id == single_step]
-            if not steps_to_run:
+            matching_steps = [s for s in steps if s.step_id == single_step]
+            if not matching_steps:
                 print(f"ERROR: Step '{single_step}' not found")
                 return {"error": f"Step not found: {single_step}"}
+            steps_to_run = [
+                {
+                    "step_id": s.step_id,
+                    "description": s.description,
+                    "prompt_template": s.prompt_generator,
+                    "validation": s.validator
+                }
+                for s in matching_steps
+            ]
         elif start_from:
             start_idx = next((i for i, s in enumerate(steps) if s.step_id == start_from), None)
             if start_idx is None:
