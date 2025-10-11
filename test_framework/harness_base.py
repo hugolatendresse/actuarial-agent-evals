@@ -388,12 +388,28 @@ class IntegrationTestHarness(BaseTestHarness):
         
         print("=" * 80)
         
+        def convert_to_serializable(obj):
+            """Convert numpy types to Python native types for JSON serialization."""
+            import numpy as np
+            if isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_to_serializable(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_to_serializable(item) for item in obj]
+            else:
+                return obj
+        
         result_summary = {
             "method": self.config.method_name,
             "ide": ide_name,
             "mode": self.mode,
             "passed": bool(validation_result["passed"]),
-            "validation_details": validation_result,
+            "validation_details": convert_to_serializable(validation_result),
             "workspace": str(workspace_dir.absolute())
         }
         
