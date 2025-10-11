@@ -1,0 +1,11 @@
+{
+  "step_1": {
+    "total_bf_ultimate": 536275000.0,
+    "description": "BF ultimate claims using latest-2 volume weighted LDFs with 1.05 tail factor"
+  },
+  "step_2": {
+    "total_bf_ibnr": 86649000.0,
+    "description": "BF IBNR reserves from model.ibnr_ attribute"
+  }
+}
+
