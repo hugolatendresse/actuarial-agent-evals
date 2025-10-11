@@ -245,9 +245,7 @@ class ActuarialIntegrationTest:
     def _generate_prompt(self) -> str:
         """Generate the integration test prompt."""
         prompt = []
-        prompt.append("=" * 80)
         prompt.append("Complete Chainladder Development Method Analysis")
-        prompt.append("=" * 80)
         prompt.append("")
         prompt.append("Perform a complete chainladder development method analysis on the provided")
         prompt.append("triangle data to calculate ultimate claims and IBNR reserves.")
@@ -263,26 +261,37 @@ class ActuarialIntegrationTest:
         prompt.append("- total_ultimate: sum of ultimate claims across all accident years")
         prompt.append("- total_ibnr: sum of IBNR reserves across all accident years")
         prompt.append("")
-        prompt.append("=" * 80)
+        prompt.append("IMPORTANT NOTES:")
+        prompt.append("- Work in the integration_solution.py file in THIS workspace")
+        prompt.append("- All data file paths are already defined with absolute paths")
+        prompt.append("- If using relative paths, they should be relative to the project root")
+        prompt.append("")
         prompt.append("TESTING WORKFLOW:")
-        prompt.append("=" * 80)
-        prompt.append("1. Write your code below the marker line")
+        prompt.append("1. Write your code below the marker line in integration_solution.py")
         prompt.append("2. Test by running: python integration_solution.py")
         prompt.append("3. Debug and fix any errors")
         prompt.append("4. ONLY when working perfectly, add this exact line at the end:")
         prompt.append("   ## SOLUTION COMPLETE - TESTED AND WORKING")
         prompt.append("")
         prompt.append("WARNING: The system evaluates immediately when it sees the completion marker!")
-        prompt.append("=" * 80)
         
         return "\n".join(prompt)
     
     def _validate_solution(self, workspace_dir: Path) -> Dict[str, Any]:
         """Validate the integration test solution."""
-        validation_code = """
+        validation_code = f"""
 import sys
+import os
+
+# Change to project root directory for proper relative path resolution
+os.chdir(r'{Path.cwd()}')
 sys.path.insert(0, '.')
-exec(open('integration_solution.py').read().replace('## SOLUTION COMPLETE - TESTED AND WORKING', ''))
+
+# Read solution from workspace directory
+with open(r'{workspace_dir / "integration_solution.py"}', 'r') as f:
+    solution_code = f.read().replace('## SOLUTION COMPLETE - TESTED AND WORKING', '')
+
+exec(solution_code)
 
 import numpy as np
 
@@ -290,15 +299,21 @@ import numpy as np
 assert 'total_ultimate' in dir(), "Variable 'total_ultimate' not found"
 assert 'total_ibnr' in dir(), "Variable 'total_ibnr' not found"
 
-print(f"TOTAL_ULTIMATE: {total_ultimate:.2f}")
-print(f"TOTAL_IBNR: {total_ibnr:.2f}")
+print(f"TOTAL_ULTIMATE: {{total_ultimate:.2f}}")
+print(f"TOTAL_IBNR: {{total_ibnr:.2f}}")
 """
         
         with open(workspace_dir / "validate.py", 'w') as f:
             f.write(validation_code)
         
+        # Use venv python if available, otherwise system python
+        python_cmd = "python"
+        venv_python = Path("venv/bin/python")
+        if venv_python.exists():
+            python_cmd = str(venv_python.absolute())
+        
         result = subprocess.run(
-            ["python", "validate.py"],
+            [python_cmd, "validate.py"],
             cwd=workspace_dir,
             capture_output=True,
             text=True,

@@ -862,15 +862,11 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
     def _build_full_prompt(self, step_id: str, description: str, step_prompt: str, workspace_dir: Path) -> str:
         """Build complete prompt with standard testing instructions."""
         lines = []
-        lines.append("=" * 80)
         lines.append(f"{step_id.upper()}: {description}")
-        lines.append("=" * 80)
         lines.append("")
         lines.append(step_prompt)
         lines.append("")
-        lines.append("=" * 80)
         lines.append("MANDATORY WORKFLOW:")
-        lines.append("=" * 80)
         lines.append(f"1. Work in file: {workspace_dir / STEP_SOLUTION_FILENAME}")
         lines.append("2. Write your code BELOW the marker line")
         lines.append("3. Test your code by running it: python step_solution.py")
@@ -879,7 +875,6 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
         lines.append("   ## STEP COMPLETE - TESTED AND WORKING")
         lines.append("")
         lines.append("WARNING: The system evaluates immediately when it sees the completion marker!")
-        lines.append("=" * 80)
         
         return "\n".join(lines)
     
