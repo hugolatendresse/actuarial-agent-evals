@@ -16,7 +16,13 @@ exec(open('step_solution.py').read().replace('## STEP COMPLETE - TESTED AND WORK
 import numpy as np
 assert 'cwp_count_ultimate' in dir(), "Variable 'cwp_count_ultimate' not found"
 
-print(f"CWP_COUNT_ULTIMATE: {cwp_count_ultimate:.2f}")
+# Handle both scalar and Triangle types
+if hasattr(cwp_count_ultimate, 'sum'):
+    cwp_total = float(cwp_count_ultimate.sum().sum())
+else:
+    cwp_total = float(cwp_count_ultimate)
+
+print(f"CWP_COUNT_ULTIMATE: {cwp_total:.2f}")
 """
     
     with open(workspace_dir / "validate.py", 'w') as f:
@@ -37,7 +43,7 @@ print(f"CWP_COUNT_ULTIMATE: {cwp_count_ultimate:.2f}")
     gt_total = ground_truth["step_1"]["cwp_count_ultimate"]
     
     if "CWP_COUNT_ULTIMATE:" in output:
-        total_str = output.split("CWP_COUNT_ULTIMATE:")[1].strip()
+        total_str = output.split("CWP_COUNT_ULTIMATE:")[1].strip().split()[0]
         actual_total = float(total_str)
         
         passed = np.isclose(actual_total, gt_total, rtol=0.01)
@@ -60,7 +66,13 @@ exec(open('step_solution.py').read().replace('## STEP COMPLETE - TESTED AND WORK
 import numpy as np
 assert 'reported_count_ultimate' in dir(), "Variable 'reported_count_ultimate' not found"
 
-print(f"REPORTED_COUNT_ULTIMATE: {reported_count_ultimate:.2f}")
+# Handle both scalar and Triangle types
+if hasattr(reported_count_ultimate, 'sum'):
+    reported_total = float(reported_count_ultimate.sum().sum())
+else:
+    reported_total = float(reported_count_ultimate)
+
+print(f"REPORTED_COUNT_ULTIMATE: {reported_total:.2f}")
 """
     
     with open(workspace_dir / "validate.py", 'w') as f:
@@ -81,7 +93,7 @@ print(f"REPORTED_COUNT_ULTIMATE: {reported_count_ultimate:.2f}")
     gt_total = ground_truth["step_2"]["reported_count_ultimate"]
     
     if "REPORTED_COUNT_ULTIMATE:" in output:
-        total_str = output.split("REPORTED_COUNT_ULTIMATE:")[1].strip()
+        total_str = output.split("REPORTED_COUNT_ULTIMATE:")[1].strip().split()[0]
         actual_total = float(total_str)
         
         passed = np.isclose(actual_total, gt_total, rtol=0.01)
@@ -174,7 +186,13 @@ exec(open('step_solution.py').read().replace('## STEP COMPLETE - TESTED AND WORK
 import numpy as np
 assert 'ultimate_severity' in dir(), "Variable 'ultimate_severity' not found"
 
-print(f"ULTIMATE_SEVERITY: {ultimate_severity:.2f}")
+# Handle both scalar and Triangle types
+if hasattr(ultimate_severity, 'sum'):
+    sev_total = float(ultimate_severity.sum().sum())
+else:
+    sev_total = float(ultimate_severity)
+
+print(f"ULTIMATE_SEVERITY: {sev_total:.2f}")
 """
     
     with open(workspace_dir / "validate.py", 'w') as f:
@@ -195,7 +213,7 @@ print(f"ULTIMATE_SEVERITY: {ultimate_severity:.2f}")
     gt_total = ground_truth["step_4"]["ultimate_severity"]
     
     if "ULTIMATE_SEVERITY:" in output:
-        total_str = output.split("ULTIMATE_SEVERITY:")[1].strip()
+        total_str = output.split("ULTIMATE_SEVERITY:")[1].strip().split()[0]
         actual_total = float(total_str)
         
         passed = np.isclose(actual_total, gt_total, rtol=0.001)
@@ -219,8 +237,19 @@ import numpy as np
 assert 'total_ultimate' in dir(), "Variable 'total_ultimate' not found"
 assert 'total_ibnr' in dir(), "Variable 'total_ibnr' not found"
 
-print(f"TOTAL_ULTIMATE: {total_ultimate:.2f}")
-print(f"TOTAL_IBNR: {total_ibnr:.2f}")
+# Handle both scalar and Triangle types
+if hasattr(total_ultimate, 'sum'):
+    ult_val = float(total_ultimate.sum().sum())
+else:
+    ult_val = float(total_ultimate)
+
+if hasattr(total_ibnr, 'sum'):
+    ibnr_val = float(total_ibnr.sum().sum())
+else:
+    ibnr_val = float(total_ibnr)
+
+print(f"TOTAL_ULTIMATE: {ult_val:.2f}")
+print(f"TOTAL_IBNR: {ibnr_val:.2f}")
 """
     
     with open(workspace_dir / "validate.py", 'w') as f:
@@ -247,9 +276,9 @@ print(f"TOTAL_IBNR: {total_ibnr:.2f}")
         
         for line in output.split('\n'):
             if 'TOTAL_ULTIMATE:' in line:
-                total_ultimate = float(line.split(':')[1].strip())
+                total_ultimate = float(line.split(':')[1].strip().split()[0])
             elif 'TOTAL_IBNR:' in line:
-                total_ibnr = float(line.split(':')[1].strip())
+                total_ibnr = float(line.split(':')[1].strip().split()[0])
         
         if total_ultimate is None or total_ibnr is None:
             return {"passed": False, "error": "Could not parse total_ultimate or total_ibnr from output"}
