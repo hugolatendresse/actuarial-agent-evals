@@ -300,6 +300,70 @@ class IntegrationTestHarness(BaseTestHarness):
         if not self.results_dir.exists():
             self.results_dir.mkdir(parents=True, exist_ok=True)
     
+    def _create_isolation_files(self, workspace_dir: Path) -> None:
+        """Create ignore files to prevent AI from accessing test framework code."""
+        cursorignore_content = """# Integration test workspace isolation
+# Prevent access to test framework code and solutions
+../../methods/
+../methods/
+methods/
+../../test_framework/
+../test_framework/
+test_framework/
+../../harness*.py
+../harness*.py
+../../actuarial_*.py
+../actuarial_*.py
+../../test_data/*/sample_solution.py
+../test_data/*/sample_solution.py
+../../test_data/*/step_*_starter_code.py
+../test_data/*/step_*_starter_code.py
+../../test_data/*/ground_truth.json
+../test_data/*/ground_truth.json
+../../ide_results/
+../ide_results/
+ide_results/
+"""
+        
+        cursorignore_path = workspace_dir / ".cursorignore"
+        WorkspaceManager.write_file(cursorignore_path, cursorignore_content)
+        
+        clinerules_content = """# Integration test workspace isolation
+# Do not read test framework or methods directories
+Do not read any files in the methods/ directory (test framework code)
+Do not read any files in the test_framework/ directory
+Do not read sample_solution.py files (these are answer keys)
+Do not read step_*_starter_code.py files (these are for unit tests)
+Do not read ground_truth.json files (these are answer keys)
+Do not read files in ide_results/ directory
+Only use CSV data files in test_data/ directories
+Work ONLY in this directory (the integration test workspace)
+"""
+        
+        clinerules_path = workspace_dir / ".clinerules"
+        WorkspaceManager.write_file(clinerules_path, clinerules_content)
+        
+        aiderignore_content = """# Integration test workspace isolation
+../../methods/
+../methods/
+methods/
+../../test_framework/
+../test_framework/
+test_framework/
+../../test_data/*/sample_solution.py
+../test_data/*/sample_solution.py
+../../test_data/*/step_*_starter_code.py
+../test_data/*/step_*_starter_code.py
+../../test_data/*/ground_truth.json
+../test_data/*/ground_truth.json
+../../ide_results/
+../ide_results/
+ide_results/
+"""
+        
+        aiderignore_path = workspace_dir / ".aiderignore"
+        WorkspaceManager.write_file(aiderignore_path, aiderignore_content)
+    
     def _create_starter_file(self) -> str:
         """Create the starter file with imports and data paths."""
         csv_files = self.config.get_data_files()
@@ -313,14 +377,25 @@ class IntegrationTestHarness(BaseTestHarness):
         lines.append("# Data file paths")
         for data_file in csv_files:
             abs_path = data_file.resolve()
-            if 'triangle' in data_file.name.lower():
+            file_name = data_file.name.lower()
+            
+            if 'closed_with_pay' in file_name or 'cwp' in file_name:
+                lines.append(f"cwp_count_data_path = r'{abs_path}'")
+            elif 'reported_claim_count' in file_name:
+                lines.append(f"reported_count_data_path = r'{abs_path}'")
+            elif 'reported_claims_triangle' in file_name:
+                lines.append(f"reported_claims_data_path = r'{abs_path}'")
+            elif 'triangle' in file_name and 'claims' in file_name:
                 lines.append(f"triangle_data_path = r'{abs_path}'")
-            elif 'premium' in data_file.name.lower():
+            elif 'premium' in file_name:
                 lines.append(f"premium_data_path = r'{abs_path}'")
-            elif 'claim' in data_file.name.lower() and 'ratio' in data_file.name.lower():
+            elif 'claim' in file_name and 'ratio' in file_name:
                 lines.append(f"claim_ratio_data_path = r'{abs_path}'")
+            elif 'rate' in file_name and 'change' in file_name:
+                lines.append(f"rate_changes_data_path = r'{abs_path}'")
             else:
-                lines.append(f"data_path = r'{abs_path}'")
+                var_name = data_file.stem.lower().replace('-', '_').replace(' ', '_') + '_data_path'
+                lines.append(f"{var_name} = r'{abs_path}'")
         lines.append("")
         lines.append(self.MARKER_LINE)
         lines.append("")
@@ -345,12 +420,23 @@ class IntegrationTestHarness(BaseTestHarness):
         workspace_dir = self.results_dir
         WorkspaceManager.create_workspace(workspace_dir, clean=True)
         
+        self._create_isolation_files(workspace_dir)
+        
         starter_content = self._create_starter_file()
         solution_path = workspace_dir / self.SOLUTION_FILENAME
         WorkspaceManager.write_file(solution_path, starter_content)
         
         if self.config.integration_prompt_generator:
-            prompt = self.config.integration_prompt_generator()
+            base_prompt = self.config.integration_prompt_generator()
+            
+            workspace_info = f"\nYour workspace directory: {workspace_dir.absolute()}\n"
+            workspace_info += f"The file you need to edit: {solution_path.absolute()}\n"
+            
+            prompt_lines = base_prompt.split('\n')
+            title_line = prompt_lines[0]
+            rest_of_prompt = '\n'.join(prompt_lines[1:])
+            
+            prompt = title_line + '\n' + workspace_info + rest_of_prompt
         else:
             raise ValueError("Integration prompt generator not configured")
         
