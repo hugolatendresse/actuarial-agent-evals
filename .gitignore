@@ -5,3 +5,4 @@ ide_results/
 venv/
 .aider*
 .cline-debug/
+.DS_Store

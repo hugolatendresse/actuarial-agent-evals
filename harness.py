@@ -526,9 +526,7 @@ class IDETestHarness:
         prompt.append("Nothing else should appear in stdout.")
         
         prompt.append("")
-        prompt.append("=" * 60)
         prompt.append("MANDATORY TESTING WORKFLOW - FOLLOW EXACTLY:")
-        prompt.append("=" * 60)
         prompt.append("10. Write your initial code in answer.py")
         prompt.append("11. Save the file WITHOUT any completion marker")
         prompt.append("12. Run the command: python answer.py")
@@ -544,7 +542,6 @@ class IDETestHarness:
         prompt.append("")
         prompt.append("WARNING: Adding the completion marker before testing will cause failure!")
         prompt.append("The system will immediately evaluate your code when it sees the marker!")
-        prompt.append("=" * 60)
 
         # Combine prompt into a single string and put in clipboard
         prompt = "\n".join(prompt)
