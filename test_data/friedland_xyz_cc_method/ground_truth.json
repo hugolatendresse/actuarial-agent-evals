@@ -1,0 +1,59 @@
+{
+  "step_1": {
+    "current_level_earned_premium": [
+      19783000,
+      30548000,
+      42784000,
+      46606000,
+      55911000,
+      60204000,
+      80411000,
+      97258000,
+      68850000,
+      49950000,
+      47797000
+    ],
+    "description": "Current level earned premium using rate changes"
+  },
+  "step_2": {
+    "tort_reform_factors": [
+      0.670,
+      0.670,
+      0.670,
+      0.670,
+      0.670,
+      0.670,
+      0.670,
+      0.670,
+      0.750,
+      1.000,
+      1.000
+    ],
+    "description": "Tort reform on-level factors to adjust to AY 2008 level"
+  },
+  "step_3": {
+    "adjusted_reported_claims": [
+      10600740,
+      16821690,
+      24954820,
+      25994660,
+      32273230,
+      29729910,
+      47092960,
+      47338850,
+      36616660,
+      31732000,
+      18632000
+    ],
+    "description": "Reported claims adjusted for tort reform"
+  },
+  "step_4": {
+    "total_cc_ultimate": 529006000,
+    "description": "Total Cape Cod ultimate claims"
+  },
+  "step_5": {
+    "total_cc_ibnr": 79380000,
+    "description": "Total Cape Cod IBNR"
+  }
+}
+

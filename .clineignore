@@ -20,6 +20,13 @@ harness.py
 actuarial_test_harness.py
 actuarial_integration_test.py
 generate_starter_code.py
+run_tests.py
+test_framework/
+
+# Method validation and test configuration (contains expected values)
+methods/*/validation.py
+methods/*/integration.py
+methods/*/config.py
 
 # Node modules and dependencies
 node_modules/

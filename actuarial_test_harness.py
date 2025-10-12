@@ -5,9 +5,9 @@ This harness tests actuarial methods step-by-step, building cumulative code
 and validating each intermediate result.
 
 Usage:
-  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cursor --mode auto
-  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cursor --mode manual
-  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cursor --step step_2
+  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cline --mode auto
+  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cline --mode manual
+  python actuarial_test_harness.py --method friedland_xyz_dev_method --ide cline --step step_2
 """
 
 import argparse

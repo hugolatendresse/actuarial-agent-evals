@@ -93,6 +93,7 @@ class BaseTestHarness(ABC):
 class UnitTestHarness(BaseTestHarness):
     """Test harness for step-by-step unit testing."""
     
+    COMPLETION_MARKER = "## STEP COMPLETE - TESTED AND WORKING"
     SOLUTION_FILENAME = "step_solution.py"
     MARKER_LINE = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
     
@@ -216,10 +217,19 @@ class UnitTestHarness(BaseTestHarness):
         
         steps = self.config.steps
         if single_step:
-            steps_to_run = [s for s in steps if s.step_id == single_step]
-            if not steps_to_run:
+            matching_steps = [s for s in steps if s.step_id == single_step]
+            if not matching_steps:
                 print(f"ERROR: Step '{single_step}' not found")
                 return {"error": f"Step not found: {single_step}"}
+            steps_to_run = [
+                {
+                    "step_id": s.step_id,
+                    "description": s.description,
+                    "prompt_template": s.prompt_generator,
+                    "validation": s.validator
+                }
+                for s in matching_steps
+            ]
         elif start_from:
             start_idx = next((i for i, s in enumerate(steps) if s.step_id == start_from), None)
             if start_idx is None:
@@ -387,12 +397,28 @@ class IntegrationTestHarness(BaseTestHarness):
         
         print("=" * 80)
         
+        def convert_to_serializable(obj):
+            """Convert numpy types to Python native types for JSON serialization."""
+            import numpy as np
+            if isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_to_serializable(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_to_serializable(item) for item in obj]
+            else:
+                return obj
+        
         result_summary = {
             "method": self.config.method_name,
             "ide": ide_name,
             "mode": self.mode,
             "passed": bool(validation_result["passed"]),
-            "validation_details": validation_result,
+            "validation_details": convert_to_serializable(validation_result),
             "workspace": str(workspace_dir.absolute())
         }
         
