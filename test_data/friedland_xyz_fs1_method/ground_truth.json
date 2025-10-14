@@ -1,0 +1,25 @@
+{
+  "step_1": {
+    "cwp_count_ultimate": 19162.0,
+    "description": "CWP count triangle developed to ultimate using latest 4 volume weighted average with 1.00 tail"
+  },
+  "step_2": {
+    "reported_count_ultimate": 16514.0,
+    "description": "Reported count triangle developed to ultimate using latest 4 volume weighted average with 1.00 tail"
+  },
+  "step_3": {
+    "ay_ultimates": [637.0, 1047.0, 1416.0, 1467.0, 1569.0, 1668.0, 2319.0, 2507.0, 1852.0, 1659.0, 1696.0],
+    "total_frequency": 17838.0,
+    "description": "AY ultimates calculated as average of CWP and reported ultimates"
+  },
+  "step_4": {
+    "ultimate_severity": 689609656.0,
+    "description": "Ultimate reported severity projected using latest 5 simple average with 1.01 tail"
+  },
+  "step_5": {
+    "total_ultimate": 689609656.0,
+    "total_ibnr": 239983656.0,
+    "description": "Total ultimate and IBNR using frequency severity method"
+  }
+}
+

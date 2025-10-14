@@ -5,9 +5,8 @@ from typing import Dict, Any
 
 
 def generate_integration_prompt() -> str:
-    """Generate the integration test prompt for BF method."""
     prompt = []
-    prompt.append("Complete Bornhuetter-Ferguson Method Analysis")
+    prompt.append("Complete Frequency-Severity Method Analysis")
     prompt.append("")
     prompt.append("CRITICAL WORKSPACE RULES:")
     prompt.append("1. Work ONLY in THIS directory - the integration_solution.py file is already here")
@@ -15,12 +14,15 @@ def generate_integration_prompt() -> str:
     prompt.append("3. Do NOT read: methods/, test_framework/, sample_solution.py, step_*_starter_code.py,")
     prompt.append("   ground_truth.json, or ide_results/ - these are test infrastructure and answer keys")
     prompt.append("")
-    prompt.append("Using the provided data files (triangle, earned premium, and expected claim ratios),")
-    prompt.append("perform a Bornhuetter-Ferguson analysis with latest-2 volume weighted LDFs and 1.05 tail factor.")
+    prompt.append("Calculate ultimate claims and IBNR using the frequency-severity method that develops")
+    prompt.append("frequency and severity to ultimate separately. Develop the CWP and reported count triangles")
+    prompt.append("to ultimate using latest 4 volume weighted average with 1.00 tail, then take the average")
+    prompt.append("of the two count ultimates. Develop severity (claims/counts) using latest 5 simple average")
+    prompt.append("with 1.01 tail.")
     prompt.append("")
-    prompt.append("Store the final results in variables:")
-    prompt.append("- total_bf_ultimate: total BF ultimate claims")
-    prompt.append("- total_bf_ibnr: total BF IBNR reserves")
+    prompt.append("Store these final results:")
+    prompt.append("- total_ultimate: total ultimate amount")
+    prompt.append("- total_ibnr: total IBNR amount")
     prompt.append("")
     prompt.append("TESTING WORKFLOW:")
     prompt.append("1. Edit integration_solution.py (already exists in THIS directory)")
@@ -36,7 +38,6 @@ def generate_integration_prompt() -> str:
 
 
 def validate_integration(workspace_dir: Path, ground_truth: Dict[str, Any]) -> Dict[str, Any]:
-    """Validate the integration test solution for BF method."""
     project_root = Path.cwd()
     
     validation_code = f"""
@@ -53,11 +54,11 @@ exec(solution_code)
 
 import numpy as np
 
-assert 'total_bf_ultimate' in dir(), "Variable 'total_bf_ultimate' not found"
-assert 'total_bf_ibnr' in dir(), "Variable 'total_bf_ibnr' not found"
+assert 'total_ultimate' in dir(), "Variable 'total_ultimate' not found"
+assert 'total_ibnr' in dir(), "Variable 'total_ibnr' not found"
 
-print(f"TOTAL_BF_ULTIMATE: {{total_bf_ultimate:.2f}}")
-print(f"TOTAL_BF_IBNR: {{total_bf_ibnr:.2f}}")
+print(f"TOTAL_ULTIMATE: {{total_ultimate:.2f}}")
+print(f"TOTAL_IBNR: {{total_ibnr:.2f}}")
 """
     
     with open(workspace_dir / "validate.py", 'w') as f:
@@ -88,37 +89,37 @@ print(f"TOTAL_BF_IBNR: {{total_bf_ibnr:.2f}}")
         total_ibnr = None
         
         for line in output.split('\n'):
-            if 'TOTAL_BF_ULTIMATE:' in line:
+            if 'TOTAL_ULTIMATE:' in line:
                 total_ultimate = float(line.split(':')[1].strip())
-            elif 'TOTAL_BF_IBNR:' in line:
+            elif 'TOTAL_IBNR:' in line:
                 total_ibnr = float(line.split(':')[1].strip())
         
         if total_ultimate is None or total_ibnr is None:
             return {
                 "passed": False,
-                "error": "Could not parse total_bf_ultimate or total_bf_ibnr from output",
+                "error": "Could not parse total_ultimate or total_ibnr from output",
                 "stdout": output
             }
         
-        gt_ultimate = ground_truth["step_1"]["total_bf_ultimate"]
-        gt_ibnr = ground_truth["step_2"]["total_bf_ibnr"]
+        gt_ultimate = ground_truth["step_5"]["total_ultimate"]
+        gt_ibnr = ground_truth["step_5"]["total_ibnr"]
         
         ultimate_match = np.isclose(total_ultimate, gt_ultimate, rtol=0.001)
         ibnr_match = np.isclose(total_ibnr, gt_ibnr, rtol=0.001)
         
         errors = []
         if not ultimate_match:
-            errors.append(f"Total BF ultimate: expected {gt_ultimate:,.2f}, got {total_ultimate:,.2f}")
+            errors.append(f"Total ultimate: expected {gt_ultimate:,.2f}, got {total_ultimate:,.2f}")
         if not ibnr_match:
-            errors.append(f"Total BF IBNR: expected {gt_ibnr:,.2f}, got {total_ibnr:,.2f}")
+            errors.append(f"Total IBNR: expected {gt_ibnr:,.2f}, got {total_ibnr:,.2f}")
         
         passed = ultimate_match and ibnr_match
         
         return {
             "passed": passed,
             "errors": errors if errors else None,
-            "total_bf_ultimate": total_ultimate,
-            "total_bf_ibnr": total_ibnr,
+            "total_ultimate": total_ultimate,
+            "total_ibnr": total_ibnr,
             "expected_ultimate": gt_ultimate,
             "expected_ibnr": gt_ibnr
         }

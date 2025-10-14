@@ -248,13 +248,20 @@ class PromptHandler:
         is_first_question: bool = True
     ) -> None:
         """Display instructions for user action."""
-        print("\n--- ACTION REQUIRED ---")
-        print(f"Workspace: {workspace_dir.absolute()}")
-        print(f"1. Open the folder in '{ide_name}'")
-        print(f"2. Work in file: {filename}")
+        print("\n" + "=" * 80)
+        print("ACTION REQUIRED - OPEN WORKSPACE IN IDE")
+        print("=" * 80)
+        print(f"Workspace directory: {workspace_dir.absolute()}")
+        print(f"File to edit:        {filename}")
+        print("")
+        print(f"IMPORTANT: Open this EXACT folder in {ide_name}:")
+        print(f"  {workspace_dir.absolute()}")
+        print("")
+        print(f"The AI will work in this isolated workspace.")
+        print("")
         
         if mode == 'auto':
-            print(f"3. The system will automatically:")
+            print("The system will automatically:")
             if ide_name.lower() == 'continue':
                 print("   - Activate chat (Cmd+L or Ctrl+L)")
                 print("   - Paste the prompt (Cmd+V or Ctrl+V)")
@@ -270,7 +277,7 @@ class PromptHandler:
                 print("   - Paste the prompt (Cmd+V or Ctrl+V)")
                 print("   - Submit the prompt (Enter)")
         else:
-            print("3. Generate the solution using the prompt from your clipboard:")
+            print("Generate the solution using the prompt from your clipboard:")
             if ide_name.lower() == 'continue':
                 print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
             elif ide_name.lower() == 'cline':

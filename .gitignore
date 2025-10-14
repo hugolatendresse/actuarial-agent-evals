@@ -6,3 +6,7 @@ venv/
 .aider*
 .cline-debug/
 .DS_Store
+node_modules/
+package-lock.json
+package.json
+.vscode/launch.json
