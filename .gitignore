@@ -6,3 +6,4 @@ venv/
 .aider*
 .cline-debug/
 .DS_Store
+node_modules/
