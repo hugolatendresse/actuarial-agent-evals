@@ -247,19 +247,44 @@ class IDEAutomation:
             print("   → Pasting prompt...")
             paste_keys = keys['paste']
             
-            if clipboard_ready:
-                pyautogui.keyDown(paste_keys[0])
-                time.sleep(0.1)
-                pyautogui.keyDown(paste_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(paste_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(paste_keys[0])
+            # Determine newline combo (default Shift+Enter). Override with CHAT_NEWLINE_MOD=shift|ctrl|alt
+            newline_mod = os.environ.get('CHAT_NEWLINE_MOD', 'shift').lower()
+            if newline_mod not in ('shift', 'ctrl', 'alt'):
+                newline_mod = 'shift'
+            
+            def type_with_preserved_newlines(text: str) -> None:
+                lines = text.splitlines()
+                for i, line in enumerate(lines):
+                    if line:
+                        pyautogui.typewrite(line, interval=0.005)
+                    if i < len(lines) - 1:
+                        if newline_mod == 'shift':
+                            pyautogui.hotkey('shift', 'enter')
+                        elif newline_mod == 'ctrl':
+                            pyautogui.hotkey('ctrl', 'enter')
+                        else:
+                            pyautogui.hotkey('alt', 'enter')
+                        time.sleep(0.05)
+            
+            if ide_name.lower() == 'cline' and system != 'darwin':
+                # Prefer typing with explicit newlines to avoid paste collapsing line breaks
+                print("   → Typing prompt with preserved line breaks for Cline...")
+                type_with_preserved_newlines(prompt_text)
                 time.sleep(delay_between)
             else:
-                print("   Clipboard unavailable; typing prompt directly (may be slower)...")
-                pyautogui.typewrite(prompt_text, interval=0.01)
-                time.sleep(delay_between)
+                if clipboard_ready:
+                    pyautogui.keyDown(paste_keys[0])
+                    time.sleep(0.1)
+                    pyautogui.keyDown(paste_keys[1])
+                    time.sleep(0.1)
+                    pyautogui.keyUp(paste_keys[1])
+                    time.sleep(0.1)
+                    pyautogui.keyUp(paste_keys[0])
+                    time.sleep(delay_between)
+                else:
+                    print("   Clipboard unavailable; typing prompt with preserved line breaks...")
+                    type_with_preserved_newlines(prompt_text)
+                    time.sleep(delay_between)
             
             print("   → Submitting prompt...")
             pyautogui.press('enter')
