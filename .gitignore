@@ -11,4 +11,4 @@ package-lock.json
 package.json
 .vscode/launch.json
 .venv/
-
+**.code-workspace
