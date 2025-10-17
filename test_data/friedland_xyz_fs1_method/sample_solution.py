@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
 import chainladder as cl
+from pathlib import Path
 
-data_dir = '/Users/sabrinatan/code/aria-tests/test_data/friedland_xyz_fs1_method'
+data_dir = Path(__file__).resolve().parent
 
-reported_claims_df = pd.read_csv(f'{data_dir}/reported_claims_triangle.csv', thousands=',')
-reported_count_df = pd.read_csv(f'{data_dir}/reported_claim_count_triangle.csv', thousands=',')
-cwp_count_df = pd.read_csv(f'{data_dir}/closed_with_pay_claim_count_triangle.csv', thousands=',')
+reported_claims_df = pd.read_csv(data_dir / 'reported_claims_triangle.csv', thousands=',')
+reported_count_df = pd.read_csv(data_dir / 'reported_claim_count_triangle.csv', thousands=',')
+cwp_count_df = pd.read_csv(data_dir / 'closed_with_pay_claim_count_triangle.csv', thousands=',')
 
 reported_claims_long = reported_claims_df.melt(id_vars=['Accident Year'], var_name='age', value_name='value')
 reported_claims_long = reported_claims_long.dropna()
