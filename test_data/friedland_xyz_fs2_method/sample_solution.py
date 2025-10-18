@@ -5,9 +5,9 @@ from pathlib import Path
 
 data_dir = Path(__file__).resolve().parent
 
-reported_count_df = pd.read_csv(data_dir / 'reported_claim_count_triangle.csv', thousands=',')
-reported_claims_df = pd.read_csv(data_dir / 'reported_claims_triangle.csv', thousands=',')
-premium_df = pd.read_csv(data_dir / 'earned_premium_and_rate_changes.csv', thousands=',')
+reported_count_df = pd.read_csv(data_dir / 'reported_claim_count_triangle.csv')
+reported_claims_df = pd.read_csv(data_dir / 'reported_claims_triangle.csv')
+premium_df = pd.read_csv(data_dir / 'earned_premium_and_rate_changes.csv')
 
 reported_count_long = reported_count_df.melt(id_vars=['Accident Year'], var_name='age', value_name='value')
 reported_count_long = reported_count_long.dropna()
@@ -56,6 +56,9 @@ years = [1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008]
 print(f"\nTotal Ultimate Claim Counts: {count_total_ultimate:,.0f}")
 print(f"Ground Truth: 16,514 (note: originally provided as 689,610 which was likely from FS1)")
 print(f"Match: {abs(count_total_ultimate - 16514) < 10}")
+print(f"\nUltimate Counts by AY:")
+for year, count in zip(years, count_ultimates_by_ay):
+    print(f"  {year}: {count:,.0f}")
 
 claim_count_trend = -0.015
 

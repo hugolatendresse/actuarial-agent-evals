@@ -1,7 +1,7 @@
 {
   "step_1": {
     "count_total_ultimate": 16514.0,
-    "count_ultimates_by_ay": [637, 1047, 1408, 1455, 1554, 1629, 2258, 2390, 1657, 1264, 1122],
+    "count_ultimates_by_ay": [637, 1047, 1408, 1455, 1552, 1628, 2256, 2390, 1666, 1298, 1177],
     "description": "Reported count triangle developed to ultimate using latest 4 volume weighted average with 1.00 tail"
   },
   "step_2": {
