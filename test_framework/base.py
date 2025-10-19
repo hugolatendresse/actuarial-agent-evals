@@ -25,8 +25,7 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
         base_keys = {
             'chat_activate': ['ctrl', "'"],
             'new_chat': ['ctrl', 'alt', 'n'],
-            # 'paste': ['ctrl', 'shift', 'v'], # TODO will that work on windows?
-            'paste': ['ctrl', 'v'], # TODO will that work on windows?
+            'paste': ['ctrl', 'v'],
         }
     
     if ide_name and ide_name.lower() == 'continue':
@@ -43,12 +42,10 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
 @staticmethod
 def enter_keybinding(paste_keys: list[str], delay_between: float = 1.0):
     for key in paste_keys:
-        print('pressing', key)
         pyautogui.keyDown(key)
         time.sleep(0.1)
 
     for key in paste_keys[::-1]:
-        print('unpressing', key)
         pyautogui.keyUp(key)
         time.sleep(0.1)
 
@@ -136,7 +133,6 @@ class IDEAutomation:
         is_first_question: bool = True,
         delay_before: float = 2.0,
         delay_between: float = 1.0,
-        clipboard_ready: bool = True
     ) -> bool:
         """Automate the process of pasting prompt into the specified IDE."""
         keys = get_platform_keys(ide_name)
@@ -170,7 +166,6 @@ class IDEAutomation:
                 
                 enter_keybinding(chat_keys, delay_between=delay_between)
             
-            # For Cline on Linux/Windows, rely on Command Palette for new chat regardless of key mapping
             if keys['new_chat'] is not None:
                 print("   → Creating new chat...")
                 new_chat_keys = keys['new_chat']
