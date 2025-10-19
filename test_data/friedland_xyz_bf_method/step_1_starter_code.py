@@ -3,10 +3,11 @@ import numpy as np
 import chainladder as cl
 from pathlib import Path
 
+data_dir = Path(__file__).resolve().parent
 # Data file paths
-triangle_data_path = r'/Users/sabrinatan/code/aria-tests/test_data/friedland_xyz_bf_method/reported_claims_triangle.csv'
-premium_data_path = r'/Users/sabrinatan/code/aria-tests/test_data/friedland_xyz_bf_method/earned_premium.csv'
-claim_ratio_data_path = r'/Users/sabrinatan/code/aria-tests/test_data/friedland_xyz_bf_method/expected_claim_ratio.csv'
+triangle_data_path = data_dir / 'reported_claims_triangle.csv'
+premium_data_path = data_dir / 'earned_premium.csv'
+claim_ratio_data_path = data_dir / 'expected_claim_ratio.csv'
 
 # Load the reported claims triangle CSV
 df = pd.read_csv(triangle_data_path)

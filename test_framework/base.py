@@ -23,9 +23,9 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
         }
     else:
         base_keys = {
-            'chat_activate': ['ctrl', 'l'],
-            'new_chat': ['ctrl', 'n'],
-            'paste': ['ctrl', 'v']
+            'chat_activate': ['ctrl', "'"],
+            'new_chat': ['ctrl', 'alt', 'n'],
+            'paste': ['ctrl', 'v'],
         }
     
     if ide_name and ide_name.lower() == 'continue':
@@ -37,6 +37,19 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
             base_keys['chat_activate'] = ['ctrl', '\'']
     
     return base_keys
+
+
+@staticmethod
+def enter_keybinding(paste_keys: list[str], delay_between: float = 1.0):
+    for key in paste_keys:
+        pyautogui.keyDown(key)
+        time.sleep(0.1)
+
+    for key in paste_keys[::-1]:
+        pyautogui.keyUp(key)
+        time.sleep(0.1)
+
+    time.sleep(delay_between)
 
 
 class FileWatcher:
@@ -119,7 +132,7 @@ class IDEAutomation:
         ide_name: str,
         is_first_question: bool = True,
         delay_before: float = 2.0,
-        delay_between: float = 1.0
+        delay_between: float = 1.0,
     ) -> bool:
         """Automate the process of pasting prompt into the specified IDE."""
         keys = get_platform_keys(ide_name)
@@ -151,28 +164,12 @@ class IDEAutomation:
                 print("   → Activating chat...")
                 chat_keys = keys['chat_activate']
                 
-                pyautogui.keyDown(chat_keys[0])
-                time.sleep(0.1)
-                pyautogui.keyDown(chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(chat_keys[0])
-                time.sleep(delay_between)
+                enter_keybinding(chat_keys, delay_between=delay_between)
             
             if keys['new_chat'] is not None:
                 print("   → Creating new chat...")
                 new_chat_keys = keys['new_chat']
-                
-                pyautogui.keyDown(new_chat_keys[0])
-                time.sleep(0.1)
-                pyautogui.keyDown(new_chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(new_chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(new_chat_keys[0])
-                time.sleep(delay_between)
-                
+                enter_keybinding(new_chat_keys, delay_between=delay_between)
                 print("   → Confirming new chat...")
                 pyautogui.press('enter')
                 time.sleep(delay_between)
@@ -182,15 +179,9 @@ class IDEAutomation:
             
             print("   → Pasting prompt...")
             paste_keys = keys['paste']
-            
-            pyautogui.keyDown(paste_keys[0])
-            time.sleep(0.1)
-            pyautogui.keyDown(paste_keys[1])
-            time.sleep(0.1)
-            pyautogui.keyUp(paste_keys[1])
-            time.sleep(0.1)
-            pyautogui.keyUp(paste_keys[0])
-            time.sleep(delay_between)
+
+
+            enter_keybinding(paste_keys, delay_between=delay_between)
             
             print("   → Submitting prompt...")
             pyautogui.press('enter')

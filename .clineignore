@@ -1,7 +1,8 @@
 # Prevent access to ground truth and reference solutions during testing
 
-# Ground truth files (contain expected answers)
+# Expected answers
 **/ground_truth.json
+**/sample_solution.py
 
 # Reference implementations (contain complete solutions)
 reference_*.py

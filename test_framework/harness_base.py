@@ -61,7 +61,7 @@ class BaseTestHarness(ABC):
             success = IDEAutomation.automate_input(
                 prompt,
                 ide_name,
-                is_first_question=self.first_question
+                is_first_question=self.first_question,
             )
             
             if self.first_question:
