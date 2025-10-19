@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("STEP 1: Develop CWP Count Triangle to Ultimate")
+    prompt.append("[Frequency-Severity Method #1 - STEP 1]: Develop CWP Count Triangle to Ultimate")
     prompt.append("")
     prompt.append("Load the closed with payment count triangle and develop it to ultimate")
     prompt.append("using the latest 4 volume weighted average with a 1.00 tail factor.")
@@ -18,7 +18,7 @@ def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("STEP 2: Develop Reported Count Triangle to Ultimate")
+    prompt.append("[Frequency-Severity Method #1 - STEP 2]: Develop Reported Count Triangle to Ultimate")
     prompt.append("")
     prompt.append("Load the reported count triangle and develop it to ultimate")
     prompt.append("using the latest 4 volume weighted average with a 1.00 tail factor.")
@@ -33,7 +33,7 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("STEP 3: Calculate AY Ultimates")
+    prompt.append("[Frequency-Severity Method #1 - STEP 3]: Calculate AY Ultimates")
     prompt.append("")
     prompt.append("Calculate the accident year ultimates by taking the average of the")
     prompt.append("CWP and reported count ultimates from Steps 1 and 2.")
@@ -50,7 +50,7 @@ def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("STEP 4: Project Ultimate Reported Severity")
+    prompt.append("[Frequency-Severity Method #1 - STEP 4]: Project Ultimate Reported Severity")
     prompt.append("")
     prompt.append("Calculate severity as reported claims / reported count.")
     prompt.append("Project ultimate severity using the latest 5 simple average with a 1.01 tail factor.")
@@ -67,7 +67,7 @@ def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_5_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("STEP 5: Calculate Total Ultimate and IBNR")
+    prompt.append("[Frequency-Severity Method #1 - STEP 5]: Calculate Total Ultimate and IBNR")
     prompt.append("")
     prompt.append("Using the frequency severity method results from Step 4:")
     prompt.append("1. Calculate total ultimate (already computed in Step 4)")

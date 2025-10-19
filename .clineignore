@@ -1,7 +1,8 @@
 # Prevent access to ground truth and reference solutions during testing
 
-# Ground truth files (contain expected answers)
+# Expected answers
 **/ground_truth.json
+**/sample_solution.py
 
 # Reference implementations (contain complete solutions)
 reference_*.py
@@ -27,6 +28,7 @@ test_framework/
 methods/*/validation.py
 methods/*/integration.py
 methods/*/config.py
+methods/*/steps.py
 
 # Node modules and dependencies
 node_modules/
