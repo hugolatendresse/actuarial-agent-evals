@@ -25,7 +25,8 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
         base_keys = {
             'chat_activate': ['ctrl', "'"],
             'new_chat': ['ctrl', 'alt', 'n'],
-            'paste': ['ctrl', 'shift', 'v'], # TODO will that work on windows?
+            # 'paste': ['ctrl', 'shift', 'v'], # TODO will that work on windows?
+            'paste': ['ctrl', 'v'], # TODO will that work on windows?
         }
     
     if ide_name and ide_name.lower() == 'continue':
