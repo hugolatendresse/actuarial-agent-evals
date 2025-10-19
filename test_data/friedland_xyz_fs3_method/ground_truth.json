@@ -1,0 +1,45 @@
+{
+  "step_1": {
+    "reported_count_ultimates_by_ay": [1455, 1554, 1630, 2260, 2393, 1668, 1300, 1178],
+    "description": "Develop reported count triangle to ultimate and build disposal rate triangle"
+  },
+  "step_2": {
+    "selected_disposal_rates": [0.24400, 0.57660, 0.70864, 0.81757, 0.91236, 0.95314, 0.98277, 0.99381, 1.00000],
+    "description": "Select disposal rates by age using latest 2 simple average with 1.00 tail factor"
+  },
+  "step_3": {
+    "projected_cwp_counts_2008": [276, 397, 157, 130, 112, 49, 36, 13, 7],
+    "description": "Calculate projected incremental closed with payment claim count"
+  },
+  "step_4": {
+    "incremental_severity_2008_age_12": 12351,
+    "description": "Calculate incremental paid severity triangle"
+  },
+  "step_5": {
+    "adjusted_severity_2008_age_12": 12351,
+    "adjusted_severity_2007_age_12": 11263,
+    "description": "Calculate adjusted to 2008 incremental paid severity with 5% trend and tort reform"
+  },
+  "step_6": {
+    "selected_adjusted_severities": [11807, 15167, 26049, 35182, 41910],
+    "description": "Select adjusted incremental paid severities for ages 12-60 using latest 2 simple average"
+  },
+  "step_7": {
+    "tail_severity_72_plus": 59951,
+    "tail_severity_84_plus": 70424,
+    "description": "Calculate tail severities for ages 72+ and 84+"
+  },
+  "step_8": {
+    "full_selected_severities": [11807, 15167, 26049, 35182, 41910, 59951, 70424, 70424, 70424],
+    "description": "Combine selected severities from ages 12 to 108-Ultimate"
+  },
+  "step_9": {
+    "projected_paid_2001": [1539, 4413, 6367, 6290, 5778, 6703, 5980, 1449, 672],
+    "description": "Project unadjusted incremental paid amounts (count × severity in thousands)"
+  },
+  "step_10": {
+    "total_ultimates_by_ay": [39191, 46708, 44290, 71108, 70534, 48974, 31253, 29656],
+    "description": "Project total ultimates by AY (sum of projected incremental paid)"
+  }
+}
+
