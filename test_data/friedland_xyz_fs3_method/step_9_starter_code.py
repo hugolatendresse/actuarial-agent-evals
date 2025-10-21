@@ -196,34 +196,5 @@ tail_severity_84 = total_paid_84_plus / total_cwp_84_plus if total_cwp_84_plus >
 
 full_selected_severities = selected_adjusted_severities + [tail_severity_72, tail_severity_84, tail_severity_84, tail_severity_84]
 
-projected_unadjusted_severity = np.zeros((n_origins, len(full_selected_severities)))
-
-for i in range(n_origins):
-    ay = 2001 + i
-    years_to_trend = base_year - ay
-    
-    if ay >= 2007:
-        tort_reform_factor = 1.0
-    elif ay == 2006:
-        tort_reform_factor = (1 - 0.33) / (1 - 0.107)
-    else:
-        tort_reform_factor = 1 - 0.33
-    
-    for j in range(len(full_selected_severities)):
-        if j < severity_array.shape[1] and not np.isnan(severity_array[i, j]):
-            projected_unadjusted_severity[i, j] = severity_array[i, j]
-        else:
-            adjusted_severity_selected = full_selected_severities[j]
-            unadjusted = adjusted_severity_selected / (severity_trend ** years_to_trend) / tort_reform_factor
-            projected_unadjusted_severity[i, j] = unadjusted
-
-projected_incremental_paid = np.zeros((n_origins, len(full_selected_severities)))
-
-for i in range(n_origins):
-    for j in range(len(full_selected_severities)):
-        severity = projected_unadjusted_severity[i, j]
-        count = projected_incremental_cwp[i, j] if j < projected_incremental_cwp.shape[1] else projected_incremental_cwp[i, -1]
-        projected_incremental_paid[i, j] = severity * count / 1000
-
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 

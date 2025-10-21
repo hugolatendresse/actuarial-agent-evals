@@ -225,7 +225,5 @@ for i in range(n_origins):
         count = projected_incremental_cwp[i, j] if j < projected_incremental_cwp.shape[1] else projected_incremental_cwp[i, -1]
         projected_incremental_paid[i, j] = severity * count / 1000
 
-ultimates_by_ay = projected_incremental_paid.sum(axis=1)
-
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 
