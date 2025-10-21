@@ -118,16 +118,10 @@ for i in range(n_origins):
             
             projected_incremental_cwp[i, j] = base * disposal_rate_diff
 
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
-
 paid_incremental = paid_claims_tri.cum_to_incr()
 cwp_incremental_from_cum = cwp_count_tri.cum_to_incr()
 incremental_severity_tri = paid_incremental / cwp_incremental_from_cum
 severity_array = incremental_severity_tri.values[0, 0, :, :]
-
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
 
 severity_trend = 1.05
 base_year = 2008
@@ -149,9 +143,6 @@ for i in range(n_origins):
             trended_value = severity_array[i, j] * (severity_trend ** years_to_trend)
             adjusted_severity[i, j] = trended_value * tort_reform_factor
 
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
-
 selected_adjusted_severities = []
 for j in range(5):
     valid_values = []
@@ -165,9 +156,6 @@ for j in range(5):
         selected_severity = np.mean(valid_values)
     
     selected_adjusted_severities.append(selected_severity)
-
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
 
 severity_cols = list(range(12, 12 + severity_array.shape[1] * 12, 12))
 total_cwp_72_plus = 0

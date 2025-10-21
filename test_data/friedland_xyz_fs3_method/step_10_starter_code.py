@@ -118,16 +118,10 @@ for i in range(n_origins):
             
             projected_incremental_cwp[i, j] = base * disposal_rate_diff
 
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
-
 paid_incremental = paid_claims_tri.cum_to_incr()
 cwp_incremental_from_cum = cwp_count_tri.cum_to_incr()
 incremental_severity_tri = paid_incremental / cwp_incremental_from_cum
 severity_array = incremental_severity_tri.values[0, 0, :, :]
-
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
 
 severity_trend = 1.05
 base_year = 2008
@@ -149,9 +143,6 @@ for i in range(n_origins):
             trended_value = severity_array[i, j] * (severity_trend ** years_to_trend)
             adjusted_severity[i, j] = trended_value * tort_reform_factor
 
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
-
 selected_adjusted_severities = []
 for j in range(5):
     valid_values = []
@@ -165,9 +156,6 @@ for j in range(5):
         selected_severity = np.mean(valid_values)
     
     selected_adjusted_severities.append(selected_severity)
-
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
 
 severity_cols = list(range(12, 12 + severity_array.shape[1] * 12, 12))
 total_cwp_72_plus = 0
@@ -206,13 +194,7 @@ for i in range(n_origins):
 tail_severity_72 = total_paid_72_plus / total_cwp_72_plus if total_cwp_72_plus > 0 else 0
 tail_severity_84 = total_paid_84_plus / total_cwp_84_plus if total_cwp_84_plus > 0 else 0
 
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
-
 full_selected_severities = selected_adjusted_severities + [tail_severity_72, tail_severity_84, tail_severity_84, tail_severity_84]
-
-### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
-
 
 projected_unadjusted_severity = np.zeros((n_origins, len(full_selected_severities)))
 
@@ -242,6 +224,8 @@ for i in range(n_origins):
         severity = projected_unadjusted_severity[i, j]
         count = projected_incremental_cwp[i, j] if j < projected_incremental_cwp.shape[1] else projected_incremental_cwp[i, -1]
         projected_incremental_paid[i, j] = severity * count / 1000
+
+ultimates_by_ay = projected_incremental_paid.sum(axis=1)
 
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 

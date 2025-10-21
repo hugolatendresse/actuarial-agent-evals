@@ -52,4 +52,3 @@ reported_count_ultimate = reported_count_pipe.named_steps.model.ultimate_
 
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 
-
