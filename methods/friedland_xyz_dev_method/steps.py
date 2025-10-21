@@ -6,6 +6,8 @@ def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
     prompt.append("[Development Method]: Load Triangle Data")
     prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
     prompt.append("Load the reported claims triangle from the CSV file and do any necessary data preparation for the chainladder method.")
     prompt.append("")
     prompt.append("Store the result in a variable called: triangle")
@@ -20,6 +22,8 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 2."""
     prompt = []
     prompt.append("[Development Method]: Calculate Volume-Weighted Average LDFs")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Calculate volume-weighted average Loss Development Factors using the latest 3 periods.")
     prompt.append("")
@@ -36,6 +40,8 @@ def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
     prompt.append("[Development Method]: Calculate Simple Average LDFs")
     prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
     prompt.append("Calculate simple average Loss Development Factors using the latest 5 periods.")
     prompt.append("")
     prompt.append("Store the result in a variable called: ldfs_simple")
@@ -50,6 +56,8 @@ def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 4."""
     prompt = []
     prompt.append("[Development Method]: Apply Tail Factor and Calculate CDFs")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Apply a tail factor of 1.00 from age 132 to ultimate.")
     prompt.append("Calculate the CDFs using the volume-weighted LDFs.")
@@ -70,6 +78,8 @@ def get_step_5_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
     prompt.append("[Development Method]: Calculate Ultimate Claims")
     prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
     prompt.append("Use the Chainladder method to calculate ultimate claims for each accident year.")
     prompt.append("Calculate the total ultimate across all years.")
     prompt.append("")
@@ -88,6 +98,8 @@ def get_step_6_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 6."""
     prompt = []
     prompt.append("[Development Method]: Calculate IBNR Reserves")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Extract IBNR reserves for each accident year and calculate the total.")
     prompt.append("")

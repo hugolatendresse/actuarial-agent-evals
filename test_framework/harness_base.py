@@ -130,8 +130,6 @@ class UnitTestHarness(BaseTestHarness):
     ) -> str:
         """Build complete prompt with standard testing instructions."""
         lines = []
-        lines.append(f"{step_id.upper()}: {description}")
-        lines.append("")
         lines.append(step_prompt)
         lines.append("")
         lines.append("MANDATORY WORKFLOW:")

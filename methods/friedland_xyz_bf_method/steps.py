@@ -6,6 +6,8 @@ def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
     prompt.append("[Bornhuetter-Ferguson Method]: Calculate Ultimate Claims")
     prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
     prompt.append("Using the provided triangle with development patterns, earned premium data, and expected claim ratios,")
     prompt.append("calculate ultimate claims using the Bornhuetter-Ferguson method.")
     prompt.append("")
@@ -21,6 +23,8 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 2: Extract BF IBNR."""
     prompt = []
     prompt.append("[Bornhuetter-Ferguson Method]: Calculate IBNR")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Calculate the IBNR reserves from the Bornhuetter-Ferguson model.")
     prompt.append("")
