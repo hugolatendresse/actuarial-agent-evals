@@ -5,8 +5,8 @@ Tests the AI's ability to perform a complete chainladder analysis in one shot,
 rather than step-by-step. This tests end-to-end competency.
 
 Usage:
-  python actuarial_integration_test.py --method friedland_xyz_fs1_method --ide cline --mode auto
-  python actuarial_integration_test.py --method friedland_xyz_fs1_method --ide cline --mode manual
+  python actuarial_integration_test.py --method friedland_xyz_fs3_method --ide cline --mode auto
+  python actuarial_integration_test.py --method friedland_xyz_fs3_method --ide cline --mode manual
 """
 
 import argparse

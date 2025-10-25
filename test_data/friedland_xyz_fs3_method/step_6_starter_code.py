@@ -143,19 +143,5 @@ for i in range(n_origins):
             trended_value = severity_array[i, j] * (severity_trend ** years_to_trend)
             adjusted_severity[i, j] = trended_value * tort_reform_factor
 
-selected_adjusted_severities = []
-for j in range(5):
-    valid_values = []
-    for i in range(n_origins):
-        if not np.isnan(adjusted_severity[i, j]):
-            valid_values.append(adjusted_severity[i, j])
-    
-    if len(valid_values) >= 2:
-        selected_severity = np.mean(valid_values[-2:])
-    else:
-        selected_severity = np.mean(valid_values)
-    
-    selected_adjusted_severities.append(selected_severity)
-
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 

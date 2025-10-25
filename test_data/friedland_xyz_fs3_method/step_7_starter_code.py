@@ -157,42 +157,8 @@ for j in range(5):
     
     selected_adjusted_severities.append(selected_severity)
 
-severity_cols = list(range(12, 12 + severity_array.shape[1] * 12, 12))
-total_cwp_72_plus = 0
-total_paid_72_plus = 0
-total_cwp_84_plus = 0
-total_paid_84_plus = 0
-
-for i in range(n_origins):
-    ay = 2001 + i
-    years_to_trend = base_year - ay
-    
-    if ay >= 2007:
-        tort_reform_factor = 1.0
-    elif ay == 2006:
-        tort_reform_factor = (1 - 0.33) / (1 - 0.107)
-    else:
-        tort_reform_factor = 1 - 0.33
-    
-    for j in range(5, severity_array.shape[1]):
-        age = severity_cols[j]
-        
-        if j < severity_array.shape[1]:
-            cwp_val = cwp_incremental_from_cum.values[0, 0, i, j] if not np.isnan(cwp_incremental_from_cum.values[0, 0, i, j]) else 0
-            paid_val = paid_incremental.values[0, 0, i, j] if not np.isnan(paid_incremental.values[0, 0, i, j]) else 0
-            
-            adjusted_paid_val = paid_val * (severity_trend ** years_to_trend) * tort_reform_factor
-            
-            if age >= 72:
-                total_cwp_72_plus += cwp_val
-                total_paid_72_plus += adjusted_paid_val
-            
-            if age >= 84:
-                total_cwp_84_plus += cwp_val
-                total_paid_84_plus += adjusted_paid_val
-
-tail_severity_72 = total_paid_72_plus / total_cwp_72_plus if total_cwp_72_plus > 0 else 0
-tail_severity_84 = total_paid_84_plus / total_cwp_84_plus if total_cwp_84_plus > 0 else 0
+paid_incremental = paid_claims_tri.cum_to_incr()
+cwp_incremental_from_cum = cwp_count_tri.cum_to_incr()
 
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 

@@ -123,25 +123,5 @@ cwp_incremental_from_cum = cwp_count_tri.cum_to_incr()
 incremental_severity_tri = paid_incremental / cwp_incremental_from_cum
 severity_array = incremental_severity_tri.values[0, 0, :, :]
 
-severity_trend = 1.05
-base_year = 2008
-adjusted_severity = np.copy(severity_array)
-
-for i in range(n_origins):
-    ay = 2001 + i
-    years_to_trend = base_year - ay
-    
-    if ay >= 2007:
-        tort_reform_factor = 1.0
-    elif ay == 2006:
-        tort_reform_factor = (1 - 0.33) / (1 - 0.107)
-    else:
-        tort_reform_factor = 1 - 0.33
-    
-    for j in range(severity_array.shape[1]):
-        if not np.isnan(severity_array[i, j]):
-            trended_value = severity_array[i, j] * (severity_trend ** years_to_trend)
-            adjusted_severity[i, j] = trended_value * tort_reform_factor
-
 ### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###
 
