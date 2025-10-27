@@ -1,0 +1,35 @@
+{
+  "step_1": {
+    "earned_premium_crl": [1364716.59, 1405593.50, 1448217.41, 1492091.78, 1536218.69],
+    "description": "Calendar year earned premiums at current rate level (earned premium * current rate level factor)"
+  },
+  "step_2": {
+    "premium_trend_annual": 0.020,
+    "description": "8-point exponential trend fit to average written premiums at current rate level using rolling annual data"
+  },
+  "step_3": {
+    "total_trend_factors": [1.1350, 1.1122, 1.0886, 1.0669, 1.0458],
+    "description": "Total trend factors by calendar year using Two-Step trending (current trend factor * projected trend factor)"
+  },
+  "step_4": {
+    "projected_earned_premium": [1548808, 1563215, 1576422, 1591790, 1606438],
+    "description": "Calendar year projected earned premiums at current rate level (earned premium at CRL * total trend factor)"
+  },
+  "step_5": {
+    "ultimate_losses": [856495.0000, 849712.4606, 835307.2497, 844601.0778, 874847.1731],
+    "description": "Ultimate losses by accident year (2011-2015) using all-years average excluding high-low with 1.0 tail factor"
+  },
+  "step_6": {
+    "current_loss_trend": -0.001,
+    "description": "8-point exponential trend for frequency and severity combined"
+  },
+  "step_7": {
+    "projected_loss_trend": 0.019,
+    "description": "4-point exponential trend for frequency and severity combined"
+  },
+  "step_8": {
+    "total_loss_trend_factors": [1.0404, 1.0412, 1.0419, 1.0427, 1.0435],
+    "description": "Total loss trend factors by accident year (2011-2015) using Two-Step trending"
+  }
+}
+
