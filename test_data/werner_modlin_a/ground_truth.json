@@ -30,6 +30,30 @@
   "step_8": {
     "total_loss_trend_factors": [1.0404, 1.0412, 1.0419, 1.0427, 1.0435],
     "description": "Total loss trend factors by accident year (2011-2015) using Two-Step trending"
+  },
+  "step_9": {
+    "projected_loss_lae_ratio": 0.64344,
+    "description": "Projected loss and LAE ratio (weighted average with ULAE factor)"
+  },
+  "step_10": {
+    "vplr": 0.78,
+    "description": "Variable permissible loss ratio (1 - variable_expense - UW_profit)"
+  },
+  "step_11": {
+    "indicated_rate_change": -0.0304,
+    "description": "Indicated rate change using loss ratio method"
+  },
+  "step_12": {
+    "credibility": 0.80433,
+    "description": "Classical credibility: sqrt(claims / claims_for_full_credibility)"
+  },
+  "step_13": {
+    "trended_present_rates": 0.07688,
+    "description": "Trended present rates indication"
+  },
+  "step_14": {
+    "credibility_weighted_rate_change": -0.009433,
+    "description": "Credibility-weighted rate change (Z × indicated + (1-Z) × trended_present)"
   }
 }
 
