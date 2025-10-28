@@ -3,7 +3,9 @@ from typing import Dict, Any
 
 def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 1]: Develop Reported Count to Ultimate")
+    prompt.append("[Frequency-Severity Method #2]: Develop Reported Count to Ultimate")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Load the reported claim count triangle and develop it to ultimate")
     prompt.append("using the latest 4 volume weighted average with a 1.00 tail factor.")
@@ -21,9 +23,11 @@ def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 2]: Trend Claim Counts (AY 2002-2006)")
+    prompt.append("[Frequency-Severity Method #2]: Trend Claim Counts (AY 2002-2006)")
     prompt.append("")
-    prompt.append("Using the ultimate counts from Step 1, trend the counts for accident years 2002-2006")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("Trend the counts for accident years 2002-2006")
     prompt.append("to 2008 using a claim count trend of -1.5%.")
     prompt.append("")
     prompt.append("Formula: trended_count = ultimate_count * (1 + trend)^(2008 - AY)")
@@ -39,7 +43,9 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 3]: Calculate On-Level Earned Premiums")
+    prompt.append("[Frequency-Severity Method #2]: Calculate On-Level Earned Premiums")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Load the earned premium and rate changes data.")
     prompt.append("Calculate on-level factors by computing cumulative rate factors and")
@@ -56,9 +62,11 @@ def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 4]: Calculate Trended Frequency to OLEP (AY 2002-2006)")
+    prompt.append("[Frequency-Severity Method #2]: Calculate Trended Frequency to OLEP (AY 2002-2006)")
     prompt.append("")
-    prompt.append("Using the trended counts from Step 2 and the on-level premiums from Step 3,")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("Using the trended counts and the on-level premiums,")
     prompt.append("calculate the frequency (to premium, in 000s).")
     prompt.append("")
     prompt.append("Calculate this for accident years 2002-2006.")
@@ -74,10 +82,12 @@ def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_5_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 5]: Select 2008 Frequency Level")
+    prompt.append("[Frequency-Severity Method #2]: Select 2008 Frequency Level")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Select the 2008 frequency level as the average of the frequencies")
-    prompt.append("for accident years 2005 and 2006 from Step 4.")
+    prompt.append("for accident years 2005 and 2006.")
     prompt.append("")
     prompt.append("Store the result in a variable called: selected_2008_freq")
     prompt.append("")
@@ -89,9 +99,11 @@ def get_step_5_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_6_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 6]: Calculate Unadjusted Frequencies (All AYs)")
+    prompt.append("[Frequency-Severity Method #2]: Calculate Unadjusted Frequencies (All AYs)")
     prompt.append("")
-    prompt.append("Using the selected 2008 frequency from Step 5, calculate unadjusted frequencies")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("Using the selected 2008 frequency, calculate unadjusted frequencies")
     prompt.append("for all accident years (1998-2008).")
     prompt.append("")
     prompt.append("Store the result in a list called: unadjusted_freqs")
@@ -105,9 +117,11 @@ def get_step_6_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_7_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 7]: Project Ultimate Claim Counts")
+    prompt.append("[Frequency-Severity Method #2]: Project Ultimate Claim Counts (All AYs)")
     prompt.append("")
-    prompt.append("Using the unadjusted frequencies from Step 6 and the earned premiums,")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("Using the unadjusted frequencies and the earned premiums,")
     prompt.append("project ultimate claim counts for all accident years (1998-2008):")
     prompt.append("")
     prompt.append("Store the result in a list called: projected_counts")
@@ -121,7 +135,9 @@ def get_step_7_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_8_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 8]: Develop Severity to Ultimate")
+    prompt.append("[Frequency-Severity Method #2]: Develop Severity to Ultimate")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Load the reported claims triangle and the reported count triangle.")
     prompt.append("Calculate severity.")
@@ -139,7 +155,9 @@ def get_step_8_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_9_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 9]: Adjust Severities to 2008 Level (AY 1998-2006)")
+    prompt.append("[Frequency-Severity Method #2]: Adjust Severities to 2008 Level (AY 1998-2006)")
+    prompt.append("")
+    prompt.append("Examine the existing code to understand what has been set up.")
     prompt.append("")
     prompt.append("Adjust severities for accident years 1998-2006 to 2008 level using:")
     prompt.append("- Severity trend: 5% per year")
@@ -158,9 +176,11 @@ def get_step_9_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_10_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 10]: Select 2008 Severity")
+    prompt.append("[Frequency-Severity Method #2]: Select 2008 Severity Level")
     prompt.append("")
-    prompt.append("From the adjusted severities in Step 9, make a selection for the 2008 severity using the latest 5 excluding high/low.")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("From the adjusted severities, make a selection for the 2008 severity using the latest 5 excluding high/low.")
     prompt.append("")
     prompt.append("Store the result in a variable called: selected_2008_severity")
     prompt.append("")
@@ -172,9 +192,11 @@ def get_step_10_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_11_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 11]: Get Unadjusted Severities for AY 2007-2008")
+    prompt.append("[Frequency-Severity Method #2]: Calculate Unadjusted Severities (AY 2007-2008)")
     prompt.append("")
-    prompt.append("Using the selected 2008 severity from Step 10, de-trend it to get the")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("De-trend the selected 2008 severity to get the")
     prompt.append("unadjusted severities for AY 2007-2008 using the 5% severity trend.")
     prompt.append("")
     prompt.append("Store the result in a list called: unadjusted_severities_latest2")
@@ -188,9 +210,11 @@ def get_step_11_prompt(step_data: Dict[str, Any]) -> str:
 
 def get_step_12_prompt(step_data: Dict[str, Any]) -> str:
     prompt = []
-    prompt.append("[Frequency-Severity Method #2 - STEP 12]: Calculate Ultimate and IBNR for Latest 2 AYs")
+    prompt.append("[Frequency-Severity Method #2]: Calculate Ultimate and IBNR (AY 2007-2008)")
     prompt.append("")
-    prompt.append("Using the projected counts from Step 7 and the unadjusted severities from Step 11, calculate the ultimate and IBNR for AY 2007-2008.")
+    prompt.append("Examine the existing code to understand what has been set up.")
+    prompt.append("")
+    prompt.append("Using the projected counts and the unadjusted severities, calculate the ultimate and IBNR for AY 2007-2008.")
     prompt.append("Store the results in variables:")
     prompt.append("- total_ultimate_latest2: total ultimate for AY 2007-2008")
     prompt.append("- total_ibnr_latest2: total IBNR for AY 2007-2008")
