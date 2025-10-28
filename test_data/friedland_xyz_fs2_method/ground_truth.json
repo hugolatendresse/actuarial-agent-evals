@@ -1,0 +1,64 @@
+{
+  "step_1": {
+    "count_total_ultimate": 16514.0,
+    "count_ultimates_by_ay": [637, 1047, 1408, 1455, 1552, 1628, 2256, 2390, 1666, 1298, 1177],
+    "description": "Reported count triangle developed to ultimate using latest 4 volume weighted average with 1.00 tail"
+  },
+  "step_2": {
+    "trended_counts": {
+      "2002": 1417,
+      "2003": 1510,
+      "2004": 2124,
+      "2005": 2284,
+      "2006": 1616
+    },
+    "description": "Trend claim counts to 2008 with -1.5% trend for AY 2002-2006"
+  },
+  "step_3": {
+    "onlevel_premiums": [19783309.51, 30547757.33, 42783973.85, 46605636, 55911227.99, 60204386, 80411091.2, 97258304, 68849920, 49950400, 47797000],
+    "description": "Calculate on-level earned premiums using rate changes and cumulative rate factors"
+  },
+  "step_4": {
+    "trended_freq_to_olep": {
+      "2002": 0.0254,
+      "2003": 0.0251,
+      "2004": 0.0264,
+      "2005": 0.0235,
+      "2006": 0.0235
+    },
+    "description": "Calculate trended frequency to OLEP (per $1000) for AY 2002-2006"
+  },
+  "step_5": {
+    "selected_2008_freq": 0.0235,
+    "description": "Select 2008 frequency level as average of AY 2005-2006"
+  },
+  "step_6": {
+    "unadjusted_freqs": [0.0270, 0.0261, 0.0252, 0.0243, 0.0235, 0.0220, 0.0202, 0.0173, 0.0155, 0.0191, 0.0235],
+    "description": "Calculate unadjusted frequencies for all AYs (per $1000)"
+  },
+  "step_7": {
+    "projected_counts": [540, 822, 1134, 1216, 1437, 1524, 2006, 2389, 1666, 1191, 1122],
+    "description": "Project ultimate claim counts using unadjusted frequencies and earned premiums"
+  },
+  "step_8": {
+    "description": "Develop severity to ultimate using latest 5 simple average with 1.01 tail"
+  },
+  "step_9": {
+    "adjusted_severities": [27379, 25153, 26177, 25062, 28645, 24894, 29316, 29820, 39333],
+    "description": "Adjust severities to 2008 level with 5% trend and tort reform factor for AY 1998-2006"
+  },
+  "step_10": {
+    "selected_2008_severity": 29260,
+    "description": "Select 2008 severity as average of middle 3 from latest 5 adjusted severities"
+  },
+  "step_11": {
+    "unadjusted_severities_latest2": [27867, 29260],
+    "description": "Get unadjusted severities for AY 2007-2008"
+  },
+  "step_12": {
+    "total_ultimate_latest2": 66014000,
+    "total_ibnr_latest2": 15650000,
+    "description": "Calculate ultimate and IBNR for latest 2 AYs (2007-2008)"
+  }
+}
+

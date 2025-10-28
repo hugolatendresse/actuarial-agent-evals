@@ -28,6 +28,7 @@ test_framework/
 methods/*/validation.py
 methods/*/integration.py
 methods/*/config.py
+methods/*/steps.py
 
 # Node modules and dependencies
 node_modules/

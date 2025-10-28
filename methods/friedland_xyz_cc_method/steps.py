@@ -4,7 +4,7 @@ from typing import Dict, Any
 def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 1."""
     prompt = []
-    prompt.append("STEP 1: Calculate Current Level Earned Premium")
+    prompt.append("[Cape Cod Method - STEP 1]: Calculate Current Level Earned Premium")
     prompt.append("")
     prompt.append("Using the earned premium and rate changes data, calculate the current level earned premium.")
     prompt.append("")
@@ -19,7 +19,7 @@ def get_step_1_prompt(step_data: Dict[str, Any]) -> str:
 def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 2."""
     prompt = []
-    prompt.append("STEP 2: Calculate Tort Reform On-Level Factors")
+    prompt.append("[Cape Cod Method - STEP 2]: Calculate Tort Reform On-Level Factors")
     prompt.append("")
     prompt.append("Tort reform effective 1/1/2006 reduced expected losses by 10.7% in AY 2006,")
     prompt.append("and by 33% in AY 2007 and later, compared to AY 2005 and earlier.")
@@ -36,7 +36,7 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
 def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 3."""
     prompt = []
-    prompt.append("STEP 3: Calculate Adjusted Reported Claims")
+    prompt.append("[Cape Cod Method - STEP 3]: Calculate Adjusted Reported Claims")
     prompt.append("")
     prompt.append("Adjust the latest reported claims for tort reform to bring all years to AY 2008 tort law level.")
     prompt.append("")
@@ -51,7 +51,7 @@ def get_step_3_prompt(step_data: Dict[str, Any]) -> str:
 def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 4."""
     prompt = []
-    prompt.append("STEP 4: Calculate Cape Cod Ultimate Claims")
+    prompt.append("[Cape Cod Method - STEP 4]: Calculate Cape Cod Ultimate Claims")
     prompt.append("")
     prompt.append("Using the tort-reform-adjusted triangle, on-level premium, latest-2 volume weighted LDFs,")
     prompt.append("1.05 tail factor, and 3.425% premium trend, calculate Cape Cod ultimate claims.")
@@ -68,7 +68,7 @@ def get_step_4_prompt(step_data: Dict[str, Any]) -> str:
 def get_step_5_prompt(step_data: Dict[str, Any]) -> str:
     """Generate prompt for step 5."""
     prompt = []
-    prompt.append("STEP 5: Calculate Cape Cod IBNR")
+    prompt.append("[Cape Cod Method - STEP 5]: Calculate Cape Cod IBNR")
     prompt.append("")
     prompt.append("Extract IBNR from the Cape Cod model and adjust back to original tort law level.")
     prompt.append("")
