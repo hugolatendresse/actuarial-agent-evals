@@ -386,14 +386,16 @@ ide_results/
                 lines.append(f"reported_claims_data_path = r'{abs_path}'")
             elif 'triangle' in file_name and 'claims' in file_name:
                 lines.append(f"triangle_data_path = r'{abs_path}'")
-            elif 'premium' in file_name:
-                lines.append(f"premium_data_path = r'{abs_path}'")
             elif 'claim' in file_name and 'ratio' in file_name:
                 lines.append(f"claim_ratio_data_path = r'{abs_path}'")
             elif 'rate' in file_name and 'change' in file_name:
                 lines.append(f"rate_changes_data_path = r'{abs_path}'")
             else:
-                var_name = data_file.stem.lower().replace('-', '_').replace(' ', '_') + '_data_path'
+                var_name = data_file.stem.lower().replace('-', '_').replace(' ', '_')
+                if not var_name.endswith('_data'):
+                    var_name = var_name + '_data_path'
+                else:
+                    var_name = var_name + '_path'
                 lines.append(f"{var_name} = r'{abs_path}'")
         lines.append("")
         lines.append(self.MARKER_LINE)
