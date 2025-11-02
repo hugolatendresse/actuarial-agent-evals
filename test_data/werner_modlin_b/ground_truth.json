@@ -1,0 +1,25 @@
+{
+  "step_1": {
+    "state_ultimate_losses": [5213240.24, 4883243.37, 4183601.44, 5210620.75, 6999146.86]
+  },
+  "step_2": {
+    "current_loss_trend_annual": 0.047982,
+    "projected_loss_trend_annual": 0.068467
+  },
+  "step_3": {
+    "total_loss_trend_factors": [1.4239, 1.3585, 1.2964, 1.2371, 1.1805]
+  },
+  "step_4": {
+    "selected_projected_non_cat_pure_premium": 535.68298
+  },
+  "step_5": {
+    "credibility_weighted_non_cat_pure_premium": 545.9715
+  },
+  "step_6": {
+    "vplr": 0.812
+  },
+  "step_7": {
+    "total_indicated_pure_premium": 915.32
+  }
+}
+
