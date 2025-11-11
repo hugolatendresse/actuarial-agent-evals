@@ -7,7 +7,7 @@ and validating each intermediate result.
 Usage:
   python actuarial_test_harness.py --method friedland_xyz_fs1_method --ide cline --mode auto
   python actuarial_test_harness.py --method friedland_xyz_fs1_method --ide cline --mode manual
-  python actuarial_test_harness.py --method werner_modlin_a --ide cline --step step_2
+  python actuarial_test_harness.py --method werner_modlin_b --ide cline --step step_1
 """
 
 import argparse
