@@ -6,7 +6,7 @@ rather than step-by-step. This tests end-to-end competency.
 
 Usage:
   python actuarial_integration_test.py --method friedland_xyz_fs3_method --ide cline --mode auto
-  python actuarial_integration_test.py --method werner_modlin_a --ide cline --mode manual
+  python actuarial_integration_test.py --method werner_modlin_b --ide cline --mode manual
   python actuarial_integration_test.py --method all --ide cline --mode auto
 """
 
