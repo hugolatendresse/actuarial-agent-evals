@@ -1,132 +1,144 @@
 #!/usr/bin/env python3
 """
-Unified Test Harness for Actuarial Methods
+Run All Integration Tests
 
-This is the single entry point for running unit and integration tests
-on actuarial methods using AI coding assistants.
+Runs integration tests for all actuarial methods using AI coding assistants.
 
 Usage:
-  python run_tests.py --method friedland_xyz_dev_method --test-type unit --ide cursor --mode auto
-  python run_tests.py --method friedland_xyz_dev_method --test-type integration --ide cursor --mode manual
-  python run_tests.py --list-methods
-  
-Examples:
-  python run_tests.py --method friedland_xyz_dev_method --test-type unit --ide cursor --mode auto
-  python run_tests.py --method friedland_xyz_dev_method --test-type unit --ide cursor --mode manual --step step_3
-  python run_tests.py --method friedland_xyz_dev_method --test-type integration --ide cursor --mode auto
+  python run_tests.py --ide cline --mode auto
+  python run_tests.py --ide cursor --mode manual
 """
 
 import argparse
 import sys
+import json
+import time
 from pathlib import Path
+from test_framework import MethodRegistry, IntegrationTestHarness
 
-from test_framework import MethodRegistry, UnitTestHarness, IntegrationTestHarness
 
-
-def list_methods():
-    """List all available methods."""
+def run_all_integration_tests(ide_name: str, mode: str):
+    """Run integration tests for all registered methods."""
     MethodRegistry.discover_methods()
-    methods = MethodRegistry.list_methods()
+    all_methods = MethodRegistry.list_methods()
     
-    if not methods:
-        print("No methods found. Please check the methods/ directory.")
-        return
-    
-    print("Available methods:")
-    for method_name in sorted(methods):
-        config = MethodRegistry.get(method_name)
-        print(f"  - {method_name}: {config.display_name}")
-
-
-def run_unit_tests(method_name: str, ide_name: str, mode: str, start_from: str = None, single_step: str = None):
-    """Run unit tests for a method."""
-    MethodRegistry.discover_methods()
-    
-    try:
-        config = MethodRegistry.get(method_name)
-    except ValueError as e:
-        print(f"Error: {e}")
-        print("\nAvailable methods:")
-        for name in MethodRegistry.list_methods():
-            print(f"  - {name}")
+    if not all_methods:
+        print("No methods found in registry.")
         return 1
     
-    harness = UnitTestHarness(config, mode=mode)
-    harness.run(ide_name, start_from=start_from, single_step=single_step)
-    return 0
-
-
-def run_integration_tests(method_name: str, ide_name: str, mode: str):
-    """Run integration tests for a method."""
-    MethodRegistry.discover_methods()
+    print("\nRunning integration tests for ALL methods")
+    print(f"IDE: {ide_name}")
+    print(f"Mode: {mode}")
+    print(f"Total methods: {len(all_methods)}")
+    print("=" * 80)
     
-    try:
-        config = MethodRegistry.get(method_name)
-    except ValueError as e:
-        print(f"Error: {e}")
-        print("\nAvailable methods:")
-        for name in MethodRegistry.list_methods():
-            print(f"  - {name}")
-        return 1
+    results = []
+    first_test = True
     
-    harness = IntegrationTestHarness(config, mode=mode)
-    harness.run(ide_name)
-    return 0
+    for i, method_name in enumerate(all_methods, 1):
+        print(f"\n{'=' * 80}")
+        print(f"TEST {i}/{len(all_methods)}: {method_name}")
+        print(f"{'=' * 80}")
+        
+        start_time = time.time()
+        
+        try:
+            config = MethodRegistry.get(method_name)
+            harness = IntegrationTestHarness(config, mode=mode)
+            
+            if not first_test:
+                harness.first_question = False
+            
+            result = harness.run(ide_name)
+            
+            if first_test:
+                first_test = False
+            
+            elapsed_time = time.time() - start_time
+            
+            results.append({
+                "method": method_name,
+                "passed": result.get("passed", False),
+                "error": result.get("error"),
+                "elapsed_time": elapsed_time,
+                "result_details": result
+            })
+            
+        except Exception as e:
+            elapsed_time = time.time() - start_time
+            print(f"\nERROR: Test for {method_name} crashed: {e}")
+            results.append({
+                "method": method_name,
+                "passed": False,
+                "error": str(e),
+                "elapsed_time": elapsed_time,
+                "result_details": None
+            })
+            
+            if first_test:
+                first_test = False
+    
+    print(f"\n\n{'=' * 80}")
+    print("ALL INTEGRATION TESTS SUMMARY")
+    print(f"{'=' * 80}")
+    
+    max_method_len = max(len(r["method"]) for r in results)
+    header_width = max(max_method_len, 30)
+    
+    print(f"{'Method':<{header_width}}  {'Status':<10}  {'Time (s)':<10}")
+    print("-" * 80)
+    
+    for result in results:
+        status = "PASSED" if result["passed"] else "FAILED"
+        elapsed = f"{result['elapsed_time']:.1f}"
+        print(f"{result['method']:<{header_width}}  {status:<10}  {elapsed:<10}")
+    
+    passed_count = sum(1 for r in results if r["passed"])
+    total_count = len(results)
+    percentage = (passed_count / total_count * 100) if total_count > 0 else 0
+    
+    print("-" * 80)
+    print(f"\nTotal: {passed_count}/{total_count} passed ({percentage:.1f}%)")
+    print(f"{'=' * 80}")
+    
+    results_dir = Path("ide_results")
+    results_dir.mkdir(parents=True, exist_ok=True)
+    summary_path = results_dir / "all_integration_tests_summary.json"
+    
+    summary_data = {
+        "ide": ide_name,
+        "mode": mode,
+        "total_tests": total_count,
+        "passed_tests": passed_count,
+        "failed_tests": total_count - passed_count,
+        "pass_percentage": percentage,
+        "results": results
+    }
+    
+    with open(summary_path, 'w') as f:
+        json.dump(summary_data, f, indent=2)
+    
+    print(f"\nSummary saved to: {summary_path}")
+    
+    return 0 if passed_count == total_count else 1
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Unified Test Harness for Actuarial Methods',
+        description='Run all integration tests for actuarial methods',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
     
-    parser.add_argument('--method', type=str,
-                        help='Actuarial method to test (e.g., friedland_xyz_dev_method)')
-    parser.add_argument('--test-type', choices=['unit', 'integration'],
-                        help='Type of test to run')
-    parser.add_argument('--ide', type=str,
-                        help='IDE to use (e.g., cursor, continue, cline)')
+    parser.add_argument('--ide', type=str, required=True,
+                        help='IDE to use (e.g., cursor, cline, continue)')
     parser.add_argument('--mode', choices=['auto', 'manual'], default='manual',
                         help='Mode of operation (default: manual)')
-    parser.add_argument('--start-from', type=str,
-                        help='Start from specific step ID (unit tests only)')
-    parser.add_argument('--step', type=str,
-                        help='Run only specific step ID (unit tests only)')
-    parser.add_argument('--list-methods', action='store_true',
-                        help='List all available methods and exit')
     
     args = parser.parse_args()
     
-    if args.list_methods:
-        list_methods()
-        return 0
-    
-    if not args.method:
-        parser.error("--method is required (or use --list-methods)")
-    
-    if not args.test_type:
-        parser.error("--test-type is required")
-    
-    if not args.ide:
-        parser.error("--ide is required")
-    
-    if args.test_type == 'unit':
-        return run_unit_tests(
-            args.method,
-            args.ide,
-            args.mode,
-            start_from=args.start_from,
-            single_step=args.step
-        )
-    elif args.test_type == 'integration':
-        if args.start_from or args.step:
-            print("Warning: --start-from and --step are ignored for integration tests")
-        return run_integration_tests(args.method, args.ide, args.mode)
-    
-    return 0
+    return run_all_integration_tests(args.ide, args.mode)
 
 
 if __name__ == '__main__':
     sys.exit(main())
-
