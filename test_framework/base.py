@@ -5,6 +5,7 @@ import platform
 import subprocess
 import pyperclip
 import pyautogui
+import errno
 from pathlib import Path
 from typing import Optional, Dict, List
 from watchdog.observers import Observer
@@ -96,22 +97,97 @@ class FileWatcher:
             else:
                 print(f"Waiting for '{self.completion_marker}' marker...")
     
+    def _poll_for_completion(self, poll_interval: float = 1.0) -> Path:
+        """Fallback polling method when inotify is unavailable.
+        
+        This method periodically checks if the file exists and contains
+        the completion marker, without using file system events.
+        
+        Args:
+            poll_interval: Time in seconds between file checks
+            
+        Returns:
+            Path to the completed solution file
+        """
+        print("Using polling mode (inotify unavailable)...")
+        solution_path = self.workspace_dir / self.filename_to_watch
+        
+        while True:
+            # Check if file exists and has completion marker
+            if solution_path.exists():
+                if self._has_completion_marker(solution_path):
+                    print(f"'{self.completion_marker}' marker found. File is ready.")
+                    self.file_path = str(solution_path)
+                    return Path(self.file_path)
+                else:
+                    print(f"File '{self.filename_to_watch}' exists but waiting for completion marker...")
+            else:
+                # File doesn't exist yet, keep waiting
+                pass
+            
+            time.sleep(poll_interval)
+    
     def wait_for_completion(self) -> Path:
-        """Wait for the file to be created and marked complete."""
+        """Wait for the file to be created and marked complete.
+        
+        Attempts to use inotify-based file watching for efficient monitoring.
+        Falls back to polling if inotify watch limit is reached or other
+        inotify errors occur.
+        
+        Returns:
+            Path to the completed solution file
+        """
+        # Try to use inotify-based watching first
         handler = FileSystemEventHandler()
         handler.on_created = self.on_created
         handler.on_modified = self.on_modified
         
-        self.observer = Observer()
-        self.observer.schedule(handler, str(self.workspace_dir), recursive=False)
-        self.observer.start()
+        self.observer = None
+        use_polling = False
         
+        try:
+            self.observer = Observer()
+            self.observer.schedule(handler, str(self.workspace_dir), recursive=False)
+            self.observer.start()
+        except OSError as e:
+            # Check if it's the inotify watch limit error
+            if e.errno == errno.ENOSPC:
+                print(f"\nWARNING: inotify watch limit reached (errno {errno.ENOSPC})")
+                print("Falling back to polling mode...")
+                print("To fix this permanently, increase the limit with:")
+                print("  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf")
+                print("  sudo sysctl -p")
+                use_polling = True
+            else:
+                # Other OSError - also fall back to polling
+                print(f"\nWARNING: Could not start file watcher ({e})")
+                print("Falling back to polling mode...")
+                use_polling = True
+        except Exception as e:
+            # Any other exception - fall back to polling
+            print(f"\nWARNING: Unexpected error starting file watcher ({e})")
+            print("Falling back to polling mode...")
+            use_polling = True
+        
+        # If we couldn't start the observer, use polling instead
+        if use_polling:
+            return self._poll_for_completion()
+        
+        # Use inotify watching
         try:
             while not self.file_ready:
                 time.sleep(1)
         finally:
-            self.observer.stop()
-            self.observer.join()
+            # Ensure observer is properly cleaned up
+            if self.observer is not None:
+                try:
+                    self.observer.stop()
+                    # Wait up to 2 seconds for the observer thread to finish
+                    self.observer.join(timeout=2.0)
+                    if self.observer.is_alive():
+                        print("WARNING: Observer thread did not stop cleanly")
+                except Exception as e:
+                    print(f"WARNING: Error stopping observer: {e}")
         
         return Path(self.file_path)
 

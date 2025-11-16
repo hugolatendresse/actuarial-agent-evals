@@ -13,3 +13,4 @@ python-dotenv>=1.0.0
 scipy>=1.13.0
 chainladder>=0.8.21
 ratemaking==0.3.0
+IPython
