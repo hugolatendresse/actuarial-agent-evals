@@ -5,6 +5,7 @@ Run All Integration Tests
 Runs integration tests for all actuarial methods using AI coding assistants.
 
 Usage:
+  Note the "--ide" argument below specifies which AI bot to paste into, NOT the ide we are using.
   python run_tests.py --ide cline --mode auto
   python run_tests.py --ide cursor --mode manual
 """
