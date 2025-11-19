@@ -55,14 +55,13 @@ class BaseTestHarness(ABC):
     
     def deliver_prompt(self, prompt: str, ide_name: str) -> bool:
         """Copy prompt to clipboard and optionally automate delivery."""
-        clipboard_ok = PromptHandler.copy_to_clipboard(prompt)
+        PromptHandler.copy_to_clipboard(prompt)
         
         if self.mode == 'auto':
             success = IDEAutomation.automate_input(
                 prompt,
                 ide_name,
                 is_first_question=self.first_question,
-                clipboard_ready=clipboard_ok
             )
             
             if self.first_question:

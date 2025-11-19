@@ -23,9 +23,9 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
         }
     else:
         base_keys = {
-            'chat_activate': ['ctrl', 'l'],
-            'new_chat': ['ctrl', 'n'],
-            'paste': ['ctrl', 'v']
+            'chat_activate': ['ctrl', "'"],
+            'new_chat': ['ctrl', 'alt', 'n'],
+            'paste': ['ctrl', 'v'],
         }
     
     if ide_name and ide_name.lower() == 'continue':
@@ -37,6 +37,19 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
             base_keys['chat_activate'] = ['ctrl', '\'']
     
     return base_keys
+
+
+@staticmethod
+def enter_keybinding(paste_keys: list[str], delay_between: float = 1.0):
+    for key in paste_keys:
+        pyautogui.keyDown(key)
+        time.sleep(0.1)
+
+    for key in paste_keys[::-1]:
+        pyautogui.keyUp(key)
+        time.sleep(0.1)
+
+    time.sleep(delay_between)
 
 
 class FileWatcher:
@@ -114,55 +127,12 @@ class IDEAutomation:
         return ide_name.lower() in IDEAutomation.SUPPORTED_IDES
     
     @staticmethod
-    def _get_cline_command_labels():
-        """Return candidate Command Palette labels for Cline focus and new chat."""
-        # Allow override via environment variables (comma-separated lists)
-        focus_env = os.environ.get('CLINE_FOCUS_CMD_LABELS')
-        new_chat_env = os.environ.get('CLINE_NEW_CHAT_CMD_LABELS')
-        if focus_env:
-            focus_labels = [label.strip() for label in focus_env.split(',') if label.strip()]
-        else:
-            focus_labels = [
-                'Cline: Focus on input',
-                'Cline: Focus input',
-                'Claude Dev: Focus on input',
-                'Claude Dev: Focus input'
-            ]
-        if new_chat_env:
-            new_chat_labels = [label.strip() for label in new_chat_env.split(',') if label.strip()]
-        else:
-            new_chat_labels = [
-                'Cline: New Chat',
-                'Cline: Start New Chat',
-                'Claude Dev: New Chat',
-                'Claude Dev: Start New Chat'
-            ]
-        return focus_labels, new_chat_labels
-
-    @staticmethod
-    def _run_palette_command(candidate_labels: List[str], delay_between: float) -> bool:
-        """Try executing one of the provided Command Palette labels."""
-        for label in candidate_labels:
-            try:
-                pyautogui.hotkey('ctrl', 'shift', 'p')
-                time.sleep(0.2)
-                pyautogui.typewrite(label, interval=0.01)
-                time.sleep(0.2)
-                pyautogui.press('enter')
-                time.sleep(delay_between)
-                return True
-            except Exception:
-                continue
-        return False
-
-    @staticmethod
     def automate_input(
         prompt_text: str,
         ide_name: str,
         is_first_question: bool = True,
         delay_before: float = 2.0,
         delay_between: float = 1.0,
-        clipboard_ready: bool = True
     ) -> bool:
         """Automate the process of pasting prompt into the specified IDE."""
         keys = get_platform_keys(ide_name)
@@ -194,44 +164,12 @@ class IDEAutomation:
                 print("   → Activating chat...")
                 chat_keys = keys['chat_activate']
                 
-                if ide_name.lower() == 'cline' and system != 'darwin':
-                    focus_labels, _ = IDEAutomation._get_cline_command_labels()
-                    executed = IDEAutomation._run_palette_command(focus_labels, delay_between)
-                    if not executed and chat_keys:
-                        pyautogui.keyDown(chat_keys[0])
-                        time.sleep(0.1)
-                        pyautogui.keyDown(chat_keys[1])
-                        time.sleep(0.1)
-                        pyautogui.keyUp(chat_keys[1])
-                        time.sleep(0.1)
-                        pyautogui.keyUp(chat_keys[0])
-                        time.sleep(delay_between)
-                else:
-                    pyautogui.keyDown(chat_keys[0])
-                    time.sleep(0.1)
-                    pyautogui.keyDown(chat_keys[1])
-                    time.sleep(0.1)
-                    pyautogui.keyUp(chat_keys[1])
-                    time.sleep(0.1)
-                    pyautogui.keyUp(chat_keys[0])
-                    time.sleep(delay_between)
+                enter_keybinding(chat_keys, delay_between=delay_between)
             
-            # For Cline on Linux/Windows, rely on Command Palette for new chat regardless of key mapping
-            if ide_name.lower() == 'cline' and system != 'darwin':
-                print("   → Creating new chat via Command Palette...")
-                _, new_chat_labels = IDEAutomation._get_cline_command_labels()
-                IDEAutomation._run_palette_command(new_chat_labels, delay_between)
-            elif keys['new_chat'] is not None:
+            if keys['new_chat'] is not None:
                 print("   → Creating new chat...")
                 new_chat_keys = keys['new_chat']
-                pyautogui.keyDown(new_chat_keys[0])
-                time.sleep(0.1)
-                pyautogui.keyDown(new_chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(new_chat_keys[1])
-                time.sleep(0.1)
-                pyautogui.keyUp(new_chat_keys[0])
-                time.sleep(delay_between)
+                enter_keybinding(new_chat_keys, delay_between=delay_between)
                 print("   → Confirming new chat...")
                 pyautogui.press('enter')
                 time.sleep(delay_between)
@@ -239,52 +177,11 @@ class IDEAutomation:
                 print("   → Skipping new chat creation (not supported by this IDE)")
                 time.sleep(delay_between)
             
-            # Ensure Cline input is focused right before pasting on Linux/Windows
-            if ide_name.lower() == 'cline' and system != 'darwin':
-                focus_labels, _ = IDEAutomation._get_cline_command_labels()
-                IDEAutomation._run_palette_command(focus_labels, delay_between)
-
             print("   → Pasting prompt...")
             paste_keys = keys['paste']
-            
-            # Determine newline combo (default Shift+Enter). Override with CHAT_NEWLINE_MOD=shift|ctrl|alt
-            newline_mod = os.environ.get('CHAT_NEWLINE_MOD', 'shift').lower()
-            if newline_mod not in ('shift', 'ctrl', 'alt'):
-                newline_mod = 'shift'
-            
-            def type_with_preserved_newlines(text: str) -> None:
-                lines = text.splitlines()
-                for i, line in enumerate(lines):
-                    if line:
-                        pyautogui.typewrite(line, interval=0.005)
-                    if i < len(lines) - 1:
-                        if newline_mod == 'shift':
-                            pyautogui.hotkey('shift', 'enter')
-                        elif newline_mod == 'ctrl':
-                            pyautogui.hotkey('ctrl', 'enter')
-                        else:
-                            pyautogui.hotkey('alt', 'enter')
-                        time.sleep(0.05)
-            
-            if ide_name.lower() == 'cline' and system != 'darwin':
-                # Prefer typing with explicit newlines to avoid paste collapsing line breaks
-                print("   → Typing prompt with preserved line breaks for Cline...")
-                type_with_preserved_newlines(prompt_text)
-                time.sleep(delay_between)
-            else:
-                if clipboard_ready:
-                    pyautogui.keyDown(paste_keys[0])
-                    time.sleep(0.1)
-                    pyautogui.keyDown(paste_keys[1])
-                    time.sleep(0.1)
-                    pyautogui.keyUp(paste_keys[1])
-                    time.sleep(0.1)
-                    pyautogui.keyUp(paste_keys[0])
-                    time.sleep(delay_between)
-                else:
-                    print("   Clipboard unavailable; typing prompt with preserved line breaks...")
-                    type_with_preserved_newlines(prompt_text)
-                    time.sleep(delay_between)
+
+
+            enter_keybinding(paste_keys, delay_between=delay_between)
             
             print("   → Submitting prompt...")
             pyautogui.press('enter')
