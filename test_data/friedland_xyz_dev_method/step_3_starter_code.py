@@ -3,7 +3,12 @@ import numpy as np
 import chainladder as cl
 from pathlib import Path
 
-data_dir = Path(__file__).resolve().parent
+script_dir = Path(__file__).resolve().parent
+if "ide_results" in str(script_dir):
+    project_root = script_dir.parent.parent.parent
+    data_dir = project_root / "test_data" / "friedland_xyz_dev_method"
+else:
+    data_dir = script_dir
 # Data file paths
 data_path_1 = data_dir / 'current_level_earned_premium.csv'
 data_path_2 = data_dir / 'reported_claims_triangle.csv'

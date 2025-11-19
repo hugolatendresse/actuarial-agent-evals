@@ -30,8 +30,6 @@ def get_step_2_prompt(step_data: Dict[str, Any]) -> str:
     prompt.append("Trend the counts for accident years 2002-2006")
     prompt.append("to 2008 using a claim count trend of -1.5%.")
     prompt.append("")
-    prompt.append("Formula: trended_count = ultimate_count * (1 + trend)^(2008 - AY)")
-    prompt.append("")
     prompt.append("Store the result in a dictionary called: trended_count_dict")
     prompt.append("with keys as accident years (2002-2006) and values as trended counts")
     prompt.append("")
