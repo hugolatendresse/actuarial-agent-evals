@@ -264,8 +264,9 @@ class UnitTestHarness(BaseTestHarness):
             results.append(result)
             
             if not result["passed"]:
-                print(f"\n✗ Step {step['step_id']} failed. Stopping.")
-                break
+                print(f"\n✗ Step {step['step_id']} failed. Continuing to next step...")
+            else:
+                print(f"\n✓ Step {step['step_id']} passed. Continuing to next step...")
         
         print(f"\n{'=' * 80}")
         print("SUMMARY")

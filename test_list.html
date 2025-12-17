@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actuarial Test Suite</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .toc {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .toc h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .toc li:last-child {
+            border-bottom: none;
+        }
+        
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .toc a:hover {
+            background-color: #f0f0f0;
+            padding-left: 20px;
+        }
+        
+        .toc .step-count {
+            background-color: #667eea;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+        
+        .method-section {
+            background: white;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .method-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .method-header:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+        }
+        
+        .method-header h2 {
+            font-size: 1.5em;
+            margin: 0;
+        }
+        
+        .toggle-icon {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+        
+        .method-header.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .method-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .method-content.active {
+            max-height: none;
+        }
+        
+        .method-inner {
+            padding: 25px;
+        }
+        
+        .test-section {
+            margin-bottom: 25px;
+        }
+        
+        .test-section h3 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: #f8f9ff;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        
+        .test-section h4 {
+            color: #764ba2;
+            font-size: 1.1em;
+            margin: 20px 0 10px 0;
+            padding: 8px 12px;
+            background-color: #faf8ff;
+            border-left: 3px solid #764ba2;
+            border-radius: 3px;
+        }
+        
+        .test-content {
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .test-content p {
+            margin-bottom: 10px;
+        }
+        
+        .test-content ul {
+            margin-left: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .test-content li {
+            margin-bottom: 5px;
+        }
+        
+        .test-content code {
+            background-color: #ffe0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .key-assumptions {
+            background-color: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .key-assumptions h5 {
+            color: #f57c00;
+            margin-bottom: 10px;
+        }
+        
+        .store-result {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .store-result strong {
+            color: #2e7d32;
+        }
+        
+        .step-item {
+            background: white;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
+        
+        .step-header {
+            background-color: #f8f9ff;
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .step-header:hover {
+            background-color: #f0f2ff;
+        }
+        
+        .step-header h5 {
+            color: #764ba2;
+            font-size: 1em;
+            margin: 0;
+        }
+        
+        .step-toggle {
+            font-size: 1.2em;
+            color: #667eea;
+            transition: transform 0.3s ease;
+        }
+        
+        .step-header.active .step-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .step-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .step-content.active {
+            max-height: none;
+        }
+        
+        .step-inner {
+            padding: 15px;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            font-size: 1.5em;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+        }
+        
+        .back-to-top:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .method-header h2 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Actuarial Test Suite</h1>
+        <p>Unit and Integration Tests for Actuarial Methods</p>
+    </header>
+
+    <div class="container">
+        <div class="toc">
+            <h2>Table of Contents</h2>
+            <ul>
+                <li><a href="#method-1">Friedland XYZ Bornhuetter-Ferguson Method <span class="step-count">2 steps</span></a></li>
+                <li><a href="#method-2">Friedland XYZ Cape Cod Method <span class="step-count">5 steps</span></a></li>
+                <li><a href="#method-3">Friedland XYZ Development Method <span class="step-count">6 steps</span></a></li>
+                <li><a href="#method-4">Friedland XYZ Frequency-Severity Method #1 <span class="step-count">5 steps</span></a></li>
+                <li><a href="#method-5">Friedland XYZ Frequency-Severity Method #2 <span class="step-count">12 steps</span></a></li>
+                <li><a href="#method-6">Friedland XYZ Frequency-Severity Method #3 <span class="step-count">10 steps</span></a></li>
+                <li><a href="#method-7">Werner-Modlin Loss Ratio Ratemaking Method <span class="step-count">14 steps</span></a></li>
+                <li><a href="#method-8">Werner-Modlin Pure Premium Ratemaking Method <span class="step-count">7 steps</span></a></li>
+            </ul>
+        </div>
+
+        <div id="method-1" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Bornhuetter-Ferguson Method</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Bornhuetter-Ferguson Method Analysis</h4>
+                            <p>Using the provided data files (triangle, earned premium, and expected claim ratios), perform a Bornhuetter-Ferguson analysis with latest-2 volume weighted LDFs and 1.05 tail factor.</p>
+                            <div class="store-result">
+                                <strong>Store the final results in variables:</strong>
+                                <ul>
+                                    <li><code>total_bf_ultimate</code>: total BF ultimate claims</li>
+                                    <li><code>total_bf_ibnr</code>: total BF IBNR reserves</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Calculate Ultimate Claims</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the provided triangle with development patterns, earned premium data, and expected claim ratios, calculate ultimate claims using the Bornhuetter-Ferguson method with:</p>
+                                    <ul>
+                                        <li>Latest-2 volume weighted LDFs</li>
+                                        <li>1.05 tail factor</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_bf_ultimate</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Calculate IBNR</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the IBNR reserves from the Bornhuetter-Ferguson model.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_bf_ibnr</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-2" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Cape Cod Method</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Cape Cod Method Analysis</h4>
+                            <p>Using the provided data files (triangle, earned premium, rate changes, and claim ratios), perform a Cape Cod analysis with:</p>
+                            <ul>
+                                <li>Latest-2 volume weighted LDFs</li>
+                                <li>1.05 tail factor from age 132</li>
+                                <li>3.425% premium trend</li>
+                                <li>Tort reform adjustments (effective 1/1/2006: -10.7% in AY 2006, -33% in AY 2007+)</li>
+                            </ul>
+                            <div class="store-result">
+                                <strong>Store the final results in variables:</strong>
+                                <ul>
+                                    <li><code>total_cc_ultimate</code>: total Cape Cod ultimate claims</li>
+                                    <li><code>total_cc_ibnr</code>: total Cape Cod IBNR reserves</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Calculate Current Level Earned Premium</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the earned premium and rate changes data, calculate the current level earned premium.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>current_level_earned_premium</code> (as a pandas Series or array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Calculate Tort Reform On-Level Factors</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Tort reform effective 1/1/2006 reduced expected losses by 10.7% in AY 2006, and by 33% in AY 2007 and later, compared to AY 2005 and earlier. Calculate the factors to adjust all years to AY 2008 tort law level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>tort_reform_factors</code> (as a pandas Series or array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate Adjusted Reported Claims</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Adjust the latest reported claims for tort reform to bring all years to AY 2008 tort law level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>adjusted_reported_claims</code> (as a pandas Series or array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Calculate Cape Cod Ultimate Claims</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the tort-reform-adjusted triangle, on-level premium, latest-2 volume weighted LDFs, 1.05 tail factor, and 3.425% premium trend, calculate Cape Cod ultimate claims. Adjust the results back to original tort law level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_cc_ultimate</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Calculate Cape Cod IBNR</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate IBNR and adjust back to original tort law level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_cc_ibnr</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-3" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Development Method</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Chainladder Development Method Analysis</h4>
+                            <p>Perform a complete chainladder development method analysis on the provided triangle data to calculate ultimate claims and IBNR reserves.</p>
+                            <p><strong>Requirements:</strong></p>
+                            <ol>
+                                <li>Load the reported claims triangle from triangle_data_path</li>
+                                <li>Calculate development factors using 3-year volume-weighted averages</li>
+                                <li>Apply a tail factor of 1.00 from age 132 to ultimate</li>
+                                <li>Calculate ultimate claims for each accident year</li>
+                                <li>Calculate IBNR reserves for each accident year</li>
+                            </ol>
+                            <div class="store-result">
+                                <strong>Store these final results:</strong>
+                                <ul>
+                                    <li><code>total_ultimate</code>: sum of ultimate claims across all accident years</li>
+                                    <li><code>total_ibnr</code>: sum of IBNR reserves across all accident years</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Load Triangle Data</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Load the reported claims triangle from the CSV file and do any necessary data preparation for the chainladder method.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>triangle</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Calculate Volume-Weighted Average LDFs</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate volume-weighted average Loss Development Factors using the latest 3 periods.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>ldfs_weighted</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate Simple Average LDFs</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate simple average Loss Development Factors using the latest 5 periods.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>ldfs_simple</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Apply Tail Factor and Calculate CDFs</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Apply a tail factor of 1.00 from age 132 to ultimate. Calculate the CDFs using the volume-weighted LDFs.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>triangle_with_tail</code>: triangle with tail factor applied</li>
+                                            <li><code>ldfs_with_tail</code>: LDFs including tail factor</li>
+                                            <li><code>cdfs</code>: CDFs</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Calculate Ultimate Claims</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Use the Chainladder method to calculate ultimate claims for each accident year. Calculate the total ultimate across all years.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>cl_result</code>: the fitted Chainladder model result</li>
+                                            <li><code>ultimates</code>: ultimate values by accident year</li>
+                                            <li><code>total_ultimate</code>: sum of all ultimates</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 6: Calculate IBNR Reserves</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Extract IBNR reserves for each accident year and calculate the total.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>ibnr</code>: IBNR values by accident year</li>
+                                            <li><code>total_ibnr</code>: sum of all IBNR</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-4" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Frequency-Severity Method #1</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Frequency-Severity Method Analysis</h4>
+                            <p>Calculate ultimate claims and IBNR using the frequency-severity method that develops frequency and severity to ultimate separately. Develop the CWP and reported count triangles to ultimate using latest 4 volume weighted average with 1.00 tail, then take the average of the two count ultimates. Develop severity (claims/counts) using latest 5 simple average with 1.01 tail.</p>
+                            <div class="store-result">
+                                <strong>Store these final results:</strong>
+                                <ul>
+                                    <li><code>total_ultimate</code>: total ultimate amount</li>
+                                    <li><code>total_ibnr</code>: total IBNR amount</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Develop CWP Count Triangle to Ultimate</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Develop the closed with payment count triangle to ultimate using the latest 4 volume weighted average with a 1.00 tail factor.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>cwp_count_ultimate</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Develop Reported Count Triangle to Ultimate</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Develop the reported count triangle to ultimate using the latest 4 volume weighted average with a 1.00 tail factor.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>reported_count_ultimate</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate AY Ultimates</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the accident year ultimates by taking the average of the CWP and reported count ultimates.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>ay_ultimates</code>: numpy array of ultimate counts by accident year</li>
+                                            <li><code>total_frequency</code>: sum of ay_ultimates</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Project Ultimate Reported Severity</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate severity as reported claims / reported count. Project ultimate severity using the latest 5 simple average with a 1.01 tail factor. Multiply ultimate severity by the frequency ultimates to get ultimate amounts by AY.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>ultimate_severity</code> (This should be the total ultimate amount across all accident years)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Calculate Total Ultimate and IBNR</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate IBNR as ultimate minus latest reported claims.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>total_ultimate</code>: total ultimate amount</li>
+                                            <li><code>total_ibnr</code>: total IBNR amount</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-5" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Frequency-Severity Method #2</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Frequency-Severity Method #2 Analysis</h4>
+                            <p>Calculate ultimate claims and IBNR for the latest 2 accident years (2007-2008) using the frequency severity approach that adjusts for volatility in the latest 2 accident years.</p>
+                            <div class="key-assumptions">
+                                <h5>KEY ASSUMPTIONS TO USE:</h5>
+                                <ul>
+                                    <li>Claim count trend: -1.5% per year</li>
+                                    <li>Severity trend: 5% per year</li>
+                                    <li>Tort reform changes effective 1/1/2006 have reduced expected losses by 10.7% in accident year 2006, and by 33% in accident years 2007 and later, compared to 2005 and earlier years.</li>
+                                    <li>Use volume-weighted average (4 periods) for count development, tail 1.00</li>
+                                    <li>Use simple average (5 periods) for severity development, tail 1.01</li>
+                                    <li>Select frequency from average of AY 2005-2006</li>
+                                    <li>Select severity from middle 3 of latest 5 adjusted severities (exclude high and low)</li>
+                                </ul>
+                            </div>
+                            <div class="store-result">
+                                <strong>Store these final results:</strong>
+                                <ul>
+                                    <li><code>total_ultimate_latest2</code>: total ultimate for AY 2007-2008</li>
+                                    <li><code>total_ibnr_latest2</code>: total IBNR for AY 2007-2008</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Develop Reported Count to Ultimate</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Load the reported claim count triangle and develop it to ultimate using the latest 4 volume weighted average with a 1.00 tail factor.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>count_ultimate</code>: the ultimate triangle</li>
+                                            <li><code>count_total_ultimate</code>: sum of all ultimate counts</li>
+                                            <li><code>count_ultimates_by_ay</code>: array of ultimate counts by accident year</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Trend Claim Counts (AY 2002-2006)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Trend the counts for accident years 2002-2006 to 2008 using a claim count trend of -1.5%.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>trended_count_dict</code> with keys as accident years (2002-2006) and values as trended counts
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate On-Level Earned Premiums</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Load the earned premium and rate changes data. Calculate on-level factors by computing cumulative rate factors and then calculating the ratio to bring all premiums to 2008 rate level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>onlevel_premiums</code> (ordered by accident year 1998-2008)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Calculate Trended Frequency to OLEP (AY 2002-2006)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the trended counts and the on-level premiums, calculate the frequency (to premium, in 000s). Calculate this for accident years 2002-2006.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>trended_freq_to_olep</code> with keys as accident years (2002-2006) and values as frequencies
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Select 2008 Frequency Level</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Select the 2008 frequency level as the average of the frequencies for accident years 2005 and 2006.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>selected_2008_freq</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 6: Calculate Unadjusted Frequencies (All AYs)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the selected 2008 frequency, calculate unadjusted frequencies for all accident years (1998-2008).</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>unadjusted_freqs</code> (ordered by accident year 1998-2008)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 7: Project Ultimate Claim Counts (All AYs)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the unadjusted frequencies and the earned premiums, project ultimate claim counts for all accident years (1998-2008):</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>projected_counts</code> (ordered by accident year 1998-2008)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 8: Develop Severity to Ultimate</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Load the reported claims triangle and the reported count triangle. Calculate severity. Develop severity to ultimate using the latest 5 simple average with a 1.01 tail factor.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>severity_ultimate</code>: the ultimate severity triangle</li>
+                                            <li><code>severity_ultimates_by_ay</code>: array of ultimate severities by accident year</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 9: Adjust Severities to 2008 Level (AY 1998-2006)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Adjust severities for accident years 1998-2006 to 2008 level using:</p>
+                                    <ul>
+                                        <li>Severity trend: 5% per year</li>
+                                        <li>Tort reform changes effective 1/1/2006 have reduced expected losses by 10.7% in accident year 2006, and by 33% in accident years 2007 and later, compared to 2005 and earlier years.</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>adjusted_severities</code> (ordered by accident year 1998-2006, 9 values total)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 10: Select 2008 Severity Level</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>From the adjusted severities, make a selection for the 2008 severity using the latest 5 excluding high/low.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>selected_2008_severity</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 11: Calculate Unadjusted Severities (AY 2007-2008)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>De-trend the selected 2008 severity to get the unadjusted severities for AY 2007-2008 using the 5% severity trend.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>unadjusted_severities_latest2</code> (ordered as [2007, 2008])
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 12: Calculate Ultimate and IBNR (AY 2007-2008)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the projected counts and the unadjusted severities, calculate the ultimate and IBNR for AY 2007-2008.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>total_ultimate_latest2</code>: total ultimate for AY 2007-2008</li>
+                                            <li><code>total_ibnr_latest2</code>: total IBNR for AY 2007-2008</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-6" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Friedland XYZ Frequency-Severity Method #3</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Frequency-Severity Method #3 Analysis with Disposal Rates</h4>
+                            <p>Calculate ultimate claims by accident year using the 3rd frequency-severity method with disposal rates. Work with accident years 2001-2008 only.</p>
+                            <div class="key-assumptions">
+                                <h5>KEY ASSUMPTIONS TO USE:</h5>
+                                <ul>
+                                    <li>Develop reported count to ultimate using latest 4 volume weighted average, tail 1.00</li>
+                                    <li>Select disposal rates using latest 2 simple average, tail 1.00</li>
+                                    <li>Severity trend: 5% per year</li>
+                                    <li>Tort reform changes effective 1/1/2006 have reduced expected losses by 10.7% in accident year 2006, and by 33% in accident years 2007 and later, compared to 2005 and earlier years</li>
+                                    <li>Select adjusted severities for ages 12-60 using latest 2 simple average</li>
+                                    <li>Calculate tail severities for ages 72+ and 84+.</li>
+                                </ul>
+                            </div>
+                            <div class="store-result">
+                                <strong>Store the final result:</strong>
+                                <ul>
+                                    <li><code>total_ultimates_by_ay</code>: array of total ultimate amounts by accident year (in thousands)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Build Disposal Rate Triangle</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Build a disposal rate triangle using the closed with payment claim count triangle and the reported count ultimates.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>disposal_rate_tri</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Select Disposal Rates by Age</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>For each development age column in the disposal rate triangle, calculate the simple average of the latest 2 values. Then append 1.00 as the tail value at age 108 (ultimate disposal rate).</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>selected_disposal_rates</code> (list or array with 9 values)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate Projected Incremental Closed Claim Count</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the projected incremental closed with payment claim count triangle.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>projected_incremental_cwp</code> (2D array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Calculate Incremental Paid Severity Triangle</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the incremental paid severity triangle.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>incremental_severity_tri</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Adjust Incremental Paid Severity to 2008</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Adjust the incremental paid severity triangle to 2008 levels:</p>
+                                    <ul>
+                                        <li>Apply 5% annual severity trend</li>
+                                        <li>Tort reform changes effective 1/1/2006 have reduced expected losses by 10.7% in accident year 2006, and by 33% in accident years 2007 and later, compared to 2005 and earlier years.</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>adjusted_severity</code> (2D numpy array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 6: Select Adjusted Severities for Ages 12-60</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Select adjusted incremental paid severities for ages 12-60 using latest 2 simple average.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>selected_adjusted_severities</code> (list or array with 5 values)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 7: Calculate Tail Severities</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate tail severity for ages 72+ and 84+.</p>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables:</strong>
+                                        <ul>
+                                            <li><code>tail_severity_72</code>: tail severity for age 72+</li>
+                                            <li><code>tail_severity_84</code>: tail severity for age 84+</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 8: Combine Full Array of Selected Severities</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Combine selected severities from ages 12 to 108-Ultimate into a single array.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>full_selected_severities</code> (list or array with 9 values)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 9: Project Unadjusted Incremental Paid Amounts</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Project unadjusted incremental paid amounts.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>projected_incremental_paid</code> (2D array in thousands)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 10: Calculate Total Ultimates by AY</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate total ultimates by accident year.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_ultimates_by_ay</code> (array in thousands)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-7" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Werner-Modlin Loss Ratio Ratemaking Method</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Werner-Modlin Loss Ratio Ratemaking Analysis</h4>
+                            <p>Using the provided data files, perform a complete loss ratio rate indication analysis:</p>
+                            
+                            <p><strong>Premium assumptions:</strong></p>
+                            <ul>
+                                <li>Use an 8-point exponential trend on rolling 4-quarter average premiums per exposure</li>
+                            </ul>
+                            
+                            <p><strong>Loss assumptions:</strong></p>
+                            <ul>
+                                <li>Develop using the chainladder method with all-years straight average excluding high and low, with a 1.0 tail factor at age 63</li>
+                                <li>Calculate current loss trend using 8-point exponential trends for frequency and severity</li>
+                                <li>Calculate projected loss trend using 4-point exponential trends for frequency and severity</li>
+                                <li>Use a ULAE factor of 1.143</li>
+                            </ul>
+                            
+                            <p><strong>Other assumptions:</strong></p>
+                            <ul>
+                                <li>Variable expense provision: 16.9956%</li>
+                                <li>Underwriting profit provision: 5%</li>
+                                <li>Fixed expense provision: 11.2867%</li>
+                                <li>Credibility weight the indication with the trended present rates indication
+                                    <ul>
+                                        <li>Total claims in historical period: 700</li>
+                                        <li>Claims for full credibility: 1082</li>
+                                        <li>Last rate change effective: 1/1/2016</li>
+                                        <li>Latest indicated rate change: 13.2%</li>
+                                        <li>Last rate change taken: 5%</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <p><strong>Policy details:</strong></p>
+                            <ul>
+                                <li>Policy term: 6 months</li>
+                                <li>Rates will be in effect for 12 months starting 1/1/2017</li>
+                                <li>Calendar years: 2011-2015</li>
+                                <li>Accident years: 2011-2015</li>
+                            </ul>
+                            
+                            <div class="store-result">
+                                <strong>Store the final result in variable:</strong>
+                                <ul>
+                                    <li><code>credibility_weighted_rate_change</code>: final credibility-weighted rate change</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Calculate CY Earned Premiums at Current Rate Level</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate calendar year earned premiums adjusted to the current rate level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_1_earned_premium_crl</code> (as a numpy array of 5 values for calendar years 2011-2015)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Calculate 8-Point Exponential Trend for Average Written Premium</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the quarterly written premium and exposure data, calculate the 8-point exponential trend for average written premiums at current rate level.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_2_premium_trend</code> (annual trend rate as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate Total Premium Trend Factors (Two-Step Trending)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate total premium trend factors for each calendar year using the Two-Step trending approach. Policy term is 6 months, rates will be in effect for 12 months starting 1/1/2017.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_3_total_trend_factors</code> (as a numpy array of 5 values for calendar years 2011-2015)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Calculate CY Projected Earned Premiums at Current Rate Level</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate projected earned premiums at current rate level for each calendar year.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_4_projected_earned_premium</code> (as a numpy array of 5 values for calendar years 2011-2015)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Develop Losses to Ultimate</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Develop the reported loss+ALAE triangle to ultimate using all-years straight average excluding high and low, with a 1.0 tail factor at age 63.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_5_ultimate_losses</code> (as a numpy array containing ultimate losses for all accident years)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 6: Calculate Current Loss Trend (8-point)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the regional loss trend data, calculate the current loss trend by fitting 8-point exponential trends to frequency and severity separately, then combining them.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_6_current_loss_trend</code> (annual combined loss trend as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 7: Calculate Projected Loss Trend (4-point)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the regional loss trend data, calculate the projected loss trend by fitting 4-point exponential trends to frequency and severity separately, then combining them.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_7_projected_loss_trend</code> (annual combined loss trend as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 8: Calculate Total Loss Trend Factors (Two-Step)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate total loss trend factors for each accident year (2011-2015) using the Two-Step trending approach. Policy term is 6 months, rates will be in effect for 12 months starting 1/1/2017.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_8_total_loss_trend_factors</code> (as a numpy array of 5 values for accident years 2011-2015)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 9: Calculate Projected Loss and LAE Ratio</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the projected loss and LAE ratio as a weighted average, applying the ULAE factor of 1.143.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_9_projected_loss_lae_ratio</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 10: Calculate Variable Permissible Loss Ratio</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the variable permissible loss ratio given:</p>
+                                    <ul>
+                                        <li>Variable expense provision: 16.9956%</li>
+                                        <li>Underwriting profit provision: 5%</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_10_vplr</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 11: Calculate Indicated Rate Change</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the indicated rate change using the loss ratio method. Fixed expense provision is 11.2867%.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_11_indicated_rate_change</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 12: Calculate Classical Credibility</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate classical credibility given:</p>
+                                    <ul>
+                                        <li>Total claims in historical period: 700</li>
+                                        <li>Claims for full credibility: 1082</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_12_credibility</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 13: Calculate Trended Present Rates Indication</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the trended present rates indication (as a rate change, not factor) for the complement of credibility. The last rate change was effective 1/1/2016, and given:</p>
+                                    <ul>
+                                        <li>Latest indicated rate change: 13.2%</li>
+                                        <li>Last rate change taken: 5%</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_13_trended_present_rates</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 14: Calculate Credibility-Weighted Rate Change</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the final credibility-weighted rate change, combining the indicated rate change with the trended present rates indication.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>step_14_credibility_weighted_rate_change</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method-8" class="method-section">
+            <div class="method-header" onclick="toggleMethod(this)">
+                <h2>Werner-Modlin Pure Premium Ratemaking Method</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="method-content">
+                <div class="method-inner">
+                    <div class="test-section">
+                        <h3>Integration Test</h3>
+                        <div class="test-content">
+                            <h4>Complete Werner-Modlin Pure Premium Ratemaking Analysis</h4>
+                            <p>Using the provided data files, perform a complete pure premium rate indication analysis:</p>
+                            
+                            <p><strong>Data files:</strong></p>
+                            <ul>
+                                <li>State earned exposures and reported loss+ALAE</li>
+                                <li>Regional quarterly pure premium data</li>
+                                <li>Countrywide reported loss+ALAE triangle</li>
+                            </ul>
+                            
+                            <p><strong>Loss assumptions:</strong></p>
+                            <ul>
+                                <li>Develop state losses using countrywide LDFs from chainladder method with an all-years simple average, 1% tail factor at age 63</li>
+                                <li>Calculate current loss trend using 8-point exponential trend</li>
+                                <li>Calculate projected loss trend using 4-point exponential trend</li>
+                                <li>Use a ULAE factor of 1.011812</li>
+                            </ul>
+                            
+                            <p><strong>Credibility:</strong></p>
+                            <ul>
+                                <li>Total reported claims (5-year): 683</li>
+                                <li>Claims for full credibility: 1082</li>
+                                <li>Regional non-CAT pure premium: $585.75</li>
+                            </ul>
+                            
+                            <p><strong>Other loading amounts:</strong></p>
+                            <ul>
+                                <li>Total CAT pure premium: $103.85</li>
+                                <li>Projected net reinsurance cost per exposure: $15.68</li>
+                                <li>Projected fixed expense per exposure: $77.74</li>
+                                <li>Variable expense provision: 13.8%</li>
+                                <li>Profit and contingency provision: 5%</li>
+                            </ul>
+                            
+                            <p><strong>Policy details:</strong></p>
+                            <ul>
+                                <li>Policy term: 12 months</li>
+                                <li>Rates will be in effect for 12 months starting 1/1/2017</li>
+                            </ul>
+                            
+                            <div class="store-result">
+                                <strong>Store the final result in variable:</strong>
+                                <ul>
+                                    <li><code>total_indicated_pure_premium</code>: final total indicated pure premium</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="test-section">
+                        <h3>Unit Tests</h3>
+                        
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 1: Develop State Losses to Ultimate using Countrywide LDFs</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Use the countrywide triangle to calculate LDFs using chainladder method with all years simple average, 1% tail factor at age 63, then apply the resulting CDFs to the state reported losses to develop them to ultimate.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>state_ultimate_losses</code> (as a numpy array)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 2: Calculate Loss Trends from Regional Pure Premium Data</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using the regional quarterly pure premium data, calculate:</p>
+                                    <ul>
+                                        <li>Current loss trend using 8-point exponential trend fit</li>
+                                        <li>Projected loss trend using 4-point exponential trend fit</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the results in variables called:</strong>
+                                        <ul>
+                                            <li><code>current_loss_trend_annual</code>: annual trend rate as decimal</li>
+                                            <li><code>projected_loss_trend_annual</code>: annual trend rate as decimal</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 3: Calculate Total Loss Trend Factors (Two-Step)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate total loss trend factors for each accident year (2011-2015) using the Two-Step trending approach. Policy term is 12 months, rates will be in effect for 12 months starting 1/1/2017.</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_loss_trend_factors</code> (as a numpy array of 5 values)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 4: Calculate Selected Projected Non-CAT Pure Premium</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Apply trend factors to ultimate losses, adjust for ULAE, and calculate the selected projected non-CAT pure premium per exposure using an all-years weighted average.</p>
+                                    <p>Use ULAE factor: 1.011812</p>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>selected_projected_non_cat_pure_premium</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 5: Calculate Credibility-Weighted Non-CAT Pure Premium</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Using classical credibility and the provided info, weight the selected projected non-CAT pure premium with the regional non-CAT pure premium.</p>
+                                    <p><strong>Given:</strong></p>
+                                    <ul>
+                                        <li>Total reported claims (5-year): 683</li>
+                                        <li>Claims for full credibility: 1082</li>
+                                        <li>Regional non-CAT pure premium: $585.75</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>credibility_weighted_non_cat_pure_premium</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 6: Calculate Variable Permissible Loss Ratio (VPLR)</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the variable permissible loss ratio given:</p>
+                                    <ul>
+                                        <li>Variable expense provision: 13.8%</li>
+                                        <li>Profit and contingency provision: 5%</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>vplr</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-item">
+                            <div class="step-header" onclick="toggleStep(this)">
+                                <h5>Step 7: Calculate Total Indicated Pure Premium</h5>
+                                <span class="step-toggle">▼</span>
+                            </div>
+                            <div class="step-content">
+                                <div class="step-inner">
+                                    <p>Examine the existing code to understand what has been set up.</p>
+                                    <p>Calculate the total indicated pure premium.</p>
+                                    <p><strong>Given:</strong></p>
+                                    <ul>
+                                        <li>Total CAT pure premium: $103.85</li>
+                                        <li>Projected net reinsurance cost per exposure: $15.68</li>
+                                        <li>Projected fixed expense per exposure: $77.74</li>
+                                    </ul>
+                                    <div class="store-result">
+                                        <strong>Store the result in:</strong> <code>total_indicated_pure_premium</code> (as decimal)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-to-top" onclick="scrollToTop()">↑</div>
+
+    <script>
+        function toggleMethod(header) {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+            
+            header.classList.toggle('active');
+            content.classList.toggle('active');
+        }
+
+        function toggleStep(header) {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+            
+            header.classList.toggle('active');
+            content.classList.toggle('active');
+        }
+
+        const backToTop = document.querySelector('.back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        document.querySelectorAll('.toc a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                const header = targetElement.querySelector('.method-header');
+                if (!header.classList.contains('active')) {
+                    toggleMethod(header);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
