@@ -5,9 +5,9 @@ This harness tests actuarial methods step-by-step, building cumulative code
 and validating each intermediate result.
 
 Usage:
-  python actuarial_test_harness.py --method friedland_xyz_fs1_method --ide cline --mode auto
-  python actuarial_test_harness.py --method friedland_xyz_fs1_method --ide cline --mode manual
-  python actuarial_test_harness.py --method werner_modlin_b --ide cline --step step_1
+  python launch_one_unit_test.py --method friedland_xyz_fs1_method --ide cline --mode auto
+  python launch_one_unit_test.py --method friedland_xyz_fs1_method --ide cline --mode manual
+  python launch_one_unit_test.py --method werner_modlin_b --ide cline --step step_1
 """
 
 import argparse
@@ -27,11 +27,11 @@ def main():
                         help='Start from specific step ID')
     parser.add_argument('--step', type=str,
                         help='Run only specific step ID')
-    
+
     args = parser.parse_args()
-    
+
     MethodRegistry.discover_methods()
-    
+
     try:
         config = MethodRegistry.get(args.method)
     except ValueError as e:
@@ -40,10 +40,10 @@ def main():
         for name in MethodRegistry.list_methods():
             print(f"  - {name}")
         return 1
-    
+
     harness = UnitTestHarness(config, mode=args.mode)
     harness.run(args.ide, start_from=args.start_from, single_step=args.step)
-    
+
     return 0
 
 
