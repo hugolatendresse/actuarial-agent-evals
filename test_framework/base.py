@@ -98,6 +98,14 @@ class FileWatcher:
     
     def wait_for_completion(self) -> Path:
         """Wait for the file to be created and marked complete."""
+        # Check if file already exists with completion marker
+        existing_file = self.workspace_dir / self.filename_to_watch
+        if existing_file.exists() and self._has_completion_marker(existing_file):
+            print(f"'{self.filename_to_watch}' already exists with completion marker.")
+            self.file_path = str(existing_file)
+            self.file_ready = True
+            return existing_file
+        
         handler = FileSystemEventHandler()
         handler.on_created = self.on_created
         handler.on_modified = self.on_modified
