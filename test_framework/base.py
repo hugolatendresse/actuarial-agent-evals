@@ -14,7 +14,7 @@ from watchdog.events import FileSystemEventHandler
 def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List[str]]]:
     """Get the correct key combinations for the current platform and IDE."""
     system = platform.system().lower()
-    
+
     if system == 'darwin':
         base_keys = {
             'chat_activate': ['command', 'l'],
@@ -27,7 +27,7 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
             'new_chat': ['ctrl', 'alt', 'n'],
             'paste': ['ctrl', 'v'],
         }
-    
+
     if ide_name and ide_name.lower() == 'continue':
         base_keys['new_chat'] = None
     elif ide_name and ide_name.lower() == 'cline':
@@ -35,11 +35,10 @@ def get_platform_keys(ide_name: Optional[str] = None) -> Dict[str, Optional[List
             base_keys['chat_activate'] = ['command', '\'']
         else:
             base_keys['chat_activate'] = ['ctrl', '\'']
-    
+
     return base_keys
 
 
-@staticmethod
 def enter_keybinding(paste_keys: list[str], delay_between: float = 1.0):
     for key in paste_keys:
         pyautogui.keyDown(key)
@@ -54,7 +53,7 @@ def enter_keybinding(paste_keys: list[str], delay_between: float = 1.0):
 
 class FileWatcher:
     """Watches for solution files to be created and marked complete."""
-    
+
     def __init__(self, filename_to_watch: str, workspace_dir: Path, completion_marker: str):
         self.filename_to_watch = filename_to_watch
         self.workspace_dir = workspace_dir
@@ -62,7 +61,7 @@ class FileWatcher:
         self.file_path = None
         self.file_ready = False
         self.observer = None
-    
+
     def _has_completion_marker(self, file_path: Path) -> bool:
         """Check if the solution has the completion marker."""
         try:
@@ -71,61 +70,62 @@ class FileWatcher:
             return self.completion_marker in content
         except (IOError, UnicodeDecodeError):
             return False
-    
+
     def on_created(self, event):
         """Called when a file is created."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
             print(f"\nDetected '{self.filename_to_watch}' created.")
             self.file_path = event.src_path
-            
+
             if self._has_completion_marker(event.src_path):
                 print(f"'{self.completion_marker}' marker found. File is ready.")
                 self.file_ready = True
             else:
                 print(f"Waiting for '{self.completion_marker}' marker...")
-    
+
     def on_modified(self, event):
         """Called when a file is modified."""
         if not event.is_directory and os.path.basename(event.src_path) == self.filename_to_watch:
             print(f"Detected '{self.filename_to_watch}' has been saved.")
             self.file_path = event.src_path
-            
+
             if self._has_completion_marker(event.src_path):
                 print(f"'{self.completion_marker}' marker found. File is ready.")
                 self.file_ready = True
             else:
                 print(f"Waiting for '{self.completion_marker}' marker...")
-    
+
     def wait_for_completion(self) -> Path:
         """Wait for the file to be created and marked complete."""
         handler = FileSystemEventHandler()
         handler.on_created = self.on_created
         handler.on_modified = self.on_modified
-        
+
         self.observer = Observer()
-        self.observer.schedule(handler, str(self.workspace_dir), recursive=False)
+        self.observer.schedule(handler, str(
+            self.workspace_dir), recursive=False)
         self.observer.start()
-        
+
         try:
             while not self.file_ready:
                 time.sleep(1)
         finally:
             self.observer.stop()
             self.observer.join()
-        
+
         return Path(self.file_path)
 
 
 class IDEAutomation:
     """Handles IDE-specific automation for prompt delivery."""
-    
+
     SUPPORTED_IDES = ['cursor', 'continue', 'cline']
-    
+
     @staticmethod
     def is_supported(ide_name: str) -> bool:
         """Check if auto mode is supported for the given IDE."""
         return ide_name.lower() in IDEAutomation.SUPPORTED_IDES
-    
+
     @staticmethod
     def automate_input(
         prompt_text: str,
@@ -136,13 +136,13 @@ class IDEAutomation:
     ) -> bool:
         """Automate the process of pasting prompt into the specified IDE."""
         keys = get_platform_keys(ide_name)
-        
+
         print(f"Automating {ide_name} input...")
-        
+
         for i in range(int(delay_before), 0, -1):
             print(f"   Starting in {i}...")
             time.sleep(1.0)
-        
+
         try:
             system = platform.system().lower()
             if system == 'darwin':
@@ -150,22 +150,25 @@ class IDEAutomation:
                 print(f"Attempting to activate {ide_app_name} application...")
                 try:
                     subprocess.run(
-                        ['osascript', '-e', f'tell application "{ide_app_name}" to activate'],
+                        ['osascript', '-e',
+                            f'tell application "{ide_app_name}" to activate'],
                         check=False,
                         capture_output=True
                     )
                     time.sleep(1.0)
                 except Exception as e:
                     print(f"Could not activate {ide_app_name} app: {e}")
-                    print(f"Please make sure {ide_app_name} is manually focused.")
-            
-            should_activate_chat = is_first_question or (ide_name and ide_name.lower() == 'continue')
+                    print(
+                        f"Please make sure {ide_app_name} is manually focused.")
+
+            should_activate_chat = is_first_question or (
+                ide_name and ide_name.lower() == 'continue')
             if should_activate_chat:
                 print("   → Activating chat...")
                 chat_keys = keys['chat_activate']
-                
+
                 enter_keybinding(chat_keys, delay_between=delay_between)
-            
+
             if keys['new_chat'] is not None:
                 print("   → Creating new chat...")
                 new_chat_keys = keys['new_chat']
@@ -176,19 +179,18 @@ class IDEAutomation:
             else:
                 print("   → Skipping new chat creation (not supported by this IDE)")
                 time.sleep(delay_between)
-            
+
             print("   → Pasting prompt...")
             paste_keys = keys['paste']
 
-
             enter_keybinding(paste_keys, delay_between=delay_between)
-            
+
             print("   → Submitting prompt...")
             pyautogui.press('enter')
-            
+
             print("Automation completed successfully!")
             return True
-            
+
         except Exception as e:
             print(f"Automation failed: {e}")
             print("Please manually paste the prompt from clipboard.")
@@ -197,7 +199,7 @@ class IDEAutomation:
 
 class WorkspaceManager:
     """Manages test workspace directories."""
-    
+
     @staticmethod
     def create_workspace(workspace_dir: Path, clean: bool = True) -> Path:
         """Create or clean a workspace directory."""
@@ -205,7 +207,7 @@ class WorkspaceManager:
             shutil.rmtree(workspace_dir)
         workspace_dir.mkdir(parents=True, exist_ok=True)
         return workspace_dir
-    
+
     @staticmethod
     def write_file(file_path: Path, content: str) -> None:
         """Write content to a file."""
@@ -215,7 +217,7 @@ class WorkspaceManager:
 
 class PromptHandler:
     """Handles prompt generation and clipboard operations."""
-    
+
     @staticmethod
     def copy_to_clipboard(text: str) -> bool:
         """Copy text to clipboard."""
@@ -229,7 +231,7 @@ class PromptHandler:
             print(text)
             print("--------------")
             return False
-    
+
     @staticmethod
     def display_instructions(
         workspace_dir: Path,
@@ -250,7 +252,7 @@ class PromptHandler:
         print("")
         print(f"The AI will work in this isolated workspace.")
         print("")
-        
+
         if mode == 'auto':
             print("The system will automatically:")
             if ide_name.lower() == 'continue':
@@ -270,13 +272,17 @@ class PromptHandler:
         else:
             print("Generate the solution using the prompt from your clipboard:")
             if ide_name.lower() == 'continue':
-                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                print(
+                    f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
             elif ide_name.lower() == 'cline':
-                print(f"   - Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
-                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                print(
+                    f"   - Press Cmd+' (Mac) or Ctrl+' (Windows/Linux) to activate {ide_name} chat")
+                print(
+                    "   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
             else:
-                print(f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
-                print("   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
+                print(
+                    f"   - Press Cmd+L (Mac) or Ctrl+L (Windows/Linux) to activate {ide_name} chat")
+                print(
+                    "   - Press Cmd+N (Mac) or Ctrl+N (Windows/Linux) to create a new chat")
             print("   - Press Cmd+V (Mac) or Ctrl+V (Windows/Linux) to paste the prompt")
             print("   - Press Enter to submit")
-
