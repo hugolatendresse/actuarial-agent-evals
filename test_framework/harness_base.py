@@ -93,7 +93,7 @@ class BaseTestHarness(ABC):
 class UnitTestHarness(BaseTestHarness):
     """Test harness for step-by-step unit testing."""
     
-    COMPLETION_MARKER = "## STEP COMPLETE - TESTED AND WORKING"
+    COMPLETION_MARKER = "## SOLUTION COMPLETE - TESTED AND WORKING"
     SOLUTION_FILENAME = "step_solution.py"
     MARKER_LINE = "### WRITE YOUR CODE BELOW. DO NOT ERASE THIS LINE OR ANYTHING ABOVE###"
     
