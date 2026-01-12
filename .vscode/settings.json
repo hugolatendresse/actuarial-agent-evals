@@ -1,0 +1,8 @@
+{
+  "python.defaultInterpreterPath": "/home/hugo/code/actuarial-test-harness/venv/bin/python3",
+  "python.terminal.activateEnvironment": true,
+  "terminal.integrated.env.linux": {
+    "VIRTUAL_ENV": "/home/hugo/code/actuarial-test-harness/venv",
+    "PATH": "/home/hugo/code/actuarial-test-harness/venv/bin:${env:PATH}"
+  }
+}
